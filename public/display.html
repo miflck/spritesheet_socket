@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Display View - All Drawings</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      #canvasContainer {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
+      .info {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #666;
+      }
+      .status {
+        text-align: center;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #e8f5e8;
+        border-radius: 5px;
+        color: #2d5d2d;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Display View - All Drawings</h1>
+    <div class="info">
+      <p>This view shows all drawings from connected users in real-time.</p>
+      <p>Open drawing clients at: <a href="/" target="_blank">/</a></p>
+    </div>
+    <div class="status" id="status">Connecting to server...</div>
+    <div id="canvasContainer"></div>
+
+    <script>
+      let socket;
+      let statusElement;
+
+      function setup() {
+        // Create canvas and attach to container
+        let canvas = createCanvas(800, 600);
+        canvas.parent("canvasContainer");
+
+        // Set background
+        background(255);
+
+        // Get status element
+        statusElement = document.getElementById("status");
+
+        // Initialize socket connection
+        socket = io();
+
+        // Join the display room
+        socket.emit("join-display");
+
+        // Handle connection status
+        socket.on("connect", () => {
+          statusElement.textContent = "Connected - Listening for drawings...";
+          statusElement.style.backgroundColor = "#e8f5e8";
+          console.log("Connected to server as display client");
+        });
+
+        socket.on("disconnect", () => {
+          statusElement.textContent = "Disconnected from server";
+          statusElement.style.backgroundColor = "#f5e8e8";
+        });
+
+        // Listen for drawing data from all drawing clients
+        socket.on("drawing", (data) => {
+          // Draw the line from drawing clients
+          stroke(data.color);
+          strokeWeight(data.weight);
+          line(data.x1, data.y1, data.x2, data.y2);
+
+          // Update status to show activity
+          statusElement.textContent = "Connected - Receiving drawings...";
+
+          // Reset status after a brief moment
+          setTimeout(() => {
+            statusElement.textContent = "Connected - Listening for drawings...";
+          }, 500);
+        });
+
+        // Handle clear canvas from drawing clients
+        socket.on("clear", () => {
+          background(255);
+          statusElement.textContent = "Canvas cleared by drawing client";
+
+          setTimeout(() => {
+            statusElement.textContent = "Connected - Listening for drawings...";
+          }, 2000);
+        });
+
+        console.log("Display view initialized");
+      }
+
+      // Disable all mouse interactions
+      function mousePressed() {
+        return false;
+      }
+
+      function mouseDragged() {
+        return false;
+      }
+
+      function mouseReleased() {
+        return false;
+      }
+
+      // Disable keyboard interactions
+      function keyPressed() {
+        return false;
+      }
+    </script>
+  </body>
+</html>

@@ -1,115 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Collaborative Drawing</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        #canvasContainer {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .info {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #666;
-        }
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      #canvasContainer {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
+      .info {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #666;
+      }
     </style>
-</head>
-<body>
-    <h1>Collaborative Drawing Canvas</h1>
+  </head>
+  <body>
+    <h1>Drawing Canvas (Backend)</h1>
     <div class="info">
-        <p>Draw on the canvas below. Your drawings will appear in real-time on other connected windows!</p>
+      <p>Draw on the canvas below. You won't see other users' drawings here.</p>
+      <p>View all drawings at: <a href="/display" target="_blank">/display</a></p>
     </div>
     <div id="canvasContainer"></div>
 
     <script>
-        let socket;
-        let drawing = false;
-        let prevX, prevY;
+      let socket;
+      let drawing = false;
+      let prevX, prevY;
 
-        function setup() {
-            // Create canvas and attach to container
-            let canvas = createCanvas(800, 600);
-            canvas.parent('canvasContainer');
-            
-            // Set background
-            background(255);
-            
-            // Initialize socket connection
-            socket = io();
-            
-            // Listen for drawing data from other clients
-            socket.on('drawing', (data) => {
-                // Draw the line from other users
-                stroke(data.color);
-                strokeWeight(data.weight);
-                line(data.x1, data.y1, data.x2, data.y2);
-            });
-            
-            console.log('Canvas initialized');
+      function setup() {
+        // Create canvas and attach to container
+        let canvas = createCanvas(800, 600);
+        canvas.parent("canvasContainer");
+
+        // Set background
+        background(255);
+
+        // Initialize socket connection
+        socket = io();
+
+        // Remove the listener for other users' drawings
+        // This view only shows your own drawing
+
+        console.log("Drawing canvas initialized");
+      }
+
+      function mousePressed() {
+        if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+          drawing = true;
+          prevX = mouseX;
+          prevY = mouseY;
         }
+      }
 
-        function mousePressed() {
-            if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-                drawing = true;
-                prevX = mouseX;
-                prevY = mouseY;
-            }
+      function mouseDragged() {
+        if (drawing && mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+          // Draw locally
+          stroke(0);
+          strokeWeight(3);
+          line(prevX, prevY, mouseX, mouseY);
+
+          // Send drawing data to server
+          socket.emit("drawing", {
+            x1: prevX,
+            y1: prevY,
+            x2: mouseX,
+            y2: mouseY,
+            color: 0,
+            weight: 3,
+          });
+
+          // Update previous position
+          prevX = mouseX;
+          prevY = mouseY;
         }
+      }
 
-        function mouseDragged() {
-            if (drawing && mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-                // Draw locally
-                stroke(0);
-                strokeWeight(3);
-                line(prevX, prevY, mouseX, mouseY);
-                
-                // Send drawing data to server
-                socket.emit('drawing', {
-                    x1: prevX,
-                    y1: prevY,
-                    x2: mouseX,
-                    y2: mouseY,
-                    color: 0,
-                    weight: 3
-                });
-                
-                // Update previous position
-                prevX = mouseX;
-                prevY = mouseY;
-            }
+      function mouseReleased() {
+        drawing = false;
+      }
+
+      // Handle clear canvas
+      function keyPressed() {
+        // Clear canvas on spacebar
+        if (key === " ") {
+          background(255);
+          socket.emit("clear");
         }
-
-        function mouseReleased() {
-            drawing = false;
-        }
-
-        function keyPressed() {
-            // Clear canvas on spacebar
-            if (key === ' ') {
-                background(255);
-                socket.emit('clear');
-            }
-        }
-
-        // Handle clear from other clients
-        socket.on('clear', () => {
-            background(255);
-        });
+      }
     </script>
-</body>
+  </body>
 </html>
