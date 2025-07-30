@@ -12,6 +12,12 @@
         padding: 20px;
         font-family: Arial, sans-serif;
         background-color: #f0f0f0;
+        /* Prevent mobile drag/scroll */
+        touch-action: pan-x pan-y;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
       h1 {
         text-align: center;
@@ -21,11 +27,29 @@
         display: flex;
         justify-content: center;
         margin-top: 20px;
+        /* Prevent canvas area from being draggable */
+        touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
       .info {
         text-align: center;
         margin-bottom: 20px;
         color: #666;
+      }
+      /* Prevent selection and dragging on canvas */
+      canvas {
+        touch-action: none !important;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
     </style>
   </head>
@@ -55,6 +79,31 @@
 
         // Set background - convert hex to P5.js format
         background(canvasSettings.backgroundColor);
+
+        // Prevent default touch behavior on canvas
+        canvas.elt.addEventListener(
+          "touchstart",
+          function (e) {
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+
+        canvas.elt.addEventListener(
+          "touchmove",
+          function (e) {
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+
+        canvas.elt.addEventListener(
+          "touchend",
+          function (e) {
+            e.preventDefault();
+          },
+          { passive: false }
+        );
 
         // Initialize socket connection
         socket = io();
@@ -142,6 +191,56 @@
           background(canvasSettings.backgroundColor);
           socket.emit("clear");
         }
+      }
+
+      // Handle touch events for mobile
+      function touchMoved() {
+        // Send cursor position for touch
+        if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+          if (mouseX !== lastMouseX || mouseY !== lastMouseY) {
+            socket.emit("cursor-position", {
+              x: mouseX,
+              y: mouseY,
+            });
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
+          }
+
+          // Handle drawing on touch drag
+          if (drawing) {
+            stroke(myColor);
+            strokeWeight(drawingSettings.strokeWeight);
+            line(prevX, prevY, mouseX, mouseY);
+
+            socket.emit("drawing", {
+              x1: prevX,
+              y1: prevY,
+              x2: mouseX,
+              y2: mouseY,
+              weight: drawingSettings.strokeWeight,
+            });
+
+            prevX = mouseX;
+            prevY = mouseY;
+          }
+        }
+        // Prevent default scrolling behavior
+        return false;
+      }
+
+      function touchStarted() {
+        // Only handle touch if within canvas
+        if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+          drawing = true;
+          prevX = mouseX;
+          prevY = mouseY;
+          return false; // Prevent default
+        }
+      }
+
+      function touchEnded() {
+        drawing = false;
+        return false; // Prevent default
       }
     </script>
   </body>

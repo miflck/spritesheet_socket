@@ -8,6 +8,7 @@ class Dragon {
     this.segLength = options.segLength || 18;
     this.strokeWeight = options.strokeWeight || 9;
     this.opacity = options.opacity || 100;
+    this.timeOut = options.timeOut || 3000;
 
     // Initialize segment positions
     this.x = [];
@@ -35,7 +36,7 @@ class Dragon {
   }
 
   // Check if dragon should be considered inactive
-  isInactive(timeoutMs = 3000) {
+  isInactive(timeoutMs = this.timeOut) {
     return Date.now() - this.lastUpdate > timeoutMs;
   }
 
@@ -55,29 +56,16 @@ class Dragon {
   // Draw the dragon
   draw() {
     if (!this.isActive) return;
-
     push();
-
     // Set dragon appearance
     strokeWeight(this.strokeWeight);
     stroke(this.color + this.opacity.toString(16).padStart(2, "0")); // Add opacity to color
-
     //Draw each segment
-    for (let i = 0; i < this.x.length; i++) {
-      if (i < this.x.length - 1) {
-        // Calculate angle for this segment
-        //const dx = this.x[i] - this.x[i + 1];
-        //const dy = this.y[i] - this.y[i + 1];
-        //const angle = atan2(dy, dx);
-        // this.drawSegment(i, this.x[i], this.y[i]);
-      }
-    }
-
+    this.drawSegments();
     // Draw dragon head (optional - a small circle)
     fill(this.color);
-    // noStroke();
+    noStroke();
     ellipse(this.targetX, this.targetY, this.strokeWeight * 1.5);
-
     pop();
   }
 
@@ -88,18 +76,17 @@ class Dragon {
     const angle = atan2(dy, dx);
     this.x[i] = xin - cos(angle) * this.segLength;
     this.y[i] = yin - sin(angle) * this.segLength;
-    this.drawSegment(this.x[i], this.y[i], angle);
   }
 
-  // Internal method to draw a single segment
-  drawSegment(x, y, angle) {
+  drawSegments() {
     push();
-    // Set dragon appearance
+
     strokeWeight(this.strokeWeight);
-    stroke(this.color + this.opacity.toString(16).padStart(2, "0")); // Add opacity to colo
-    translate(x, y);
-    rotate(angle);
-    line(0, 0, this.segLength, 0);
+    stroke(this.color + this.opacity.toString(16).padStart(2, "0"));
+    line(this.targetX, this.targetY, this.x[0], this.y[0]);
+    for (let i = 0; i < this.x.length; i++) {
+      line(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
+    }
     pop();
   }
 

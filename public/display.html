@@ -51,13 +51,11 @@
       let socket;
       let statusElement;
       let dragons = {}; // Store dragon instances for each client
-      let settings = {
-        canvas: { width: 800, height: 600, backgroundColor: "#FFFFFF" },
-        drawing: { cursorSize: 20, cursorOpacity: "99" },
-        ui: { clientIdLength: 8, cursorIdLength: 6, statusUpdateDelay: 500, clearStatusDelay: 2000 },
-        server: { cursorInactiveTimeout: 5000 },
-        dragon: { segNum: 20, segLength: 18, strokeWeight: 9, opacity: 180 },
-      };
+      let settings;
+
+      function preload() {
+        settings = loadJSON("settings.json");
+      }
 
       function setup() {
         // Create canvas using default settings (will be updated when clients send settings)
@@ -91,18 +89,27 @@
 
         // Listen for drawing data from all drawing clients
         socket.on("drawing", (data) => {
-          // Draw the line with the client's assigned color
-          stroke(data.color);
-          strokeWeight(data.weight);
-          line(data.x1, data.y1, data.x2, data.y2);
+          //   // Draw the line with the client's assigned color
+          //   stroke(data.color);
+          //   strokeWeight(data.weight);
+          //   line(data.x1, data.y1, data.x2, data.y2);
+          //   // Update status to show activity
+          //   statusElement.textContent = "Connected - Receiving drawings...";
+          //   // Reset status after a brief moment
+          //   setTimeout(() => {
+          //     statusElement.textContent = "Connected - Listening for drawings...";
+          //   }, settings.ui.statusUpdateDelay);
 
-          // Update status to show activity
-          statusElement.textContent = "Connected - Receiving drawings...";
+          const clientId = data.clientId;
 
-          // Reset status after a brief moment
-          setTimeout(() => {
-            statusElement.textContent = "Connected - Listening for drawings...";
-          }, settings.ui.statusUpdateDelay);
+          // Create dragon if it doesn't exist
+          if (!dragons[clientId]) {
+            dragons[clientId] = new Dragon(clientId, data.color, settings.dragon);
+            console.log(`Created dragon for client ${clientId}`);
+          }
+
+          // Update dragon target position
+          dragons[clientId].updateTarget(data.x1, data.y1);
         });
 
         // Listen for cursor position updates - create/update dragons

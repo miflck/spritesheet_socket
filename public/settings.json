@@ -37,5 +37,6 @@
     "port": 3000,
     "cursorInactiveTimeout": 5000,
     "enableLogging": true
-  }
+  },
+  "dragon": { "segNum": 20, "segLength": 18, "strokeWeight": 9, "opacity": 180 }
 }

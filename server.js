@@ -11,7 +11,7 @@ const io = socketIo(server);
 // Load settings from JSON file
 let settings;
 try {
-  const settingsData = fs.readFileSync("settings.json", "utf8");
+  const settingsData = fs.readFileSync("public/settings.json", "utf8");
   settings = JSON.parse(settingsData);
   console.log("Settings loaded successfully");
 } catch (error) {
