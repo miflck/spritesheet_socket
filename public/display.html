@@ -53,13 +53,21 @@
       let dragons = {}; // Store dragon instances for each client
       let settings;
 
+      // Helper function to denormalize coordinates (convert from 0-1 to canvas pixels)
+      function denormalizeCoords(normalizedX, normalizedY) {
+        return {
+          x: map(normalizedX, 0, 1, 0, width),
+          y: map(normalizedY, 0, 1, 0, height),
+        };
+      }
+
       function preload() {
         settings = loadJSON("settings.json");
       }
 
       function setup() {
         // Create canvas using default settings (will be updated when clients send settings)
-        let canvas = createCanvas(settings.canvas.width, settings.canvas.height);
+        let canvas = createCanvas(settings.canvas.displayWidth, settings.canvas.displayHeight);
         canvas.parent("canvasContainer");
 
         // Set background
@@ -108,8 +116,11 @@
             console.log(`Created dragon for client ${clientId}`);
           }
 
-          // Update dragon target position
-          dragons[clientId].updateTarget(data.x1, data.y1);
+          // Denormalize coordinates before using them
+          const denormalized = denormalizeCoords(data.x1, data.y1);
+
+          // Update dragon target position with pixel coordinates
+          dragons[clientId].updateTarget(denormalized.x, denormalized.y);
         });
 
         // Listen for cursor position updates - create/update dragons
@@ -122,8 +133,11 @@
             console.log(`Created dragon for client ${clientId}`);
           }
 
-          // Update dragon target position
-          dragons[clientId].updateTarget(data.x, data.y);
+          // Denormalize coordinates before using them
+          const denormalized = denormalizeCoords(data.x, data.y);
+
+          // Update dragon target position with pixel coordinates
+          dragons[clientId].updateTarget(denormalized.x, denormalized.y);
         });
 
         // Handle client disconnections - remove dragons

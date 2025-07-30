@@ -17,9 +17,11 @@
     "#6C5CE7"
   ],
   "canvas": {
-    "width": 800,
-    "height": 600,
-    "backgroundColor": "#FFFFFF"
+    "width": "windowWidth",
+    "height": "windowHeight",
+    "backgroundColor": "#FFFFFF",
+    "displayWidth": 800,
+    "displayHeight": 600
   },
   "drawing": {
     "strokeWeight": 3,
