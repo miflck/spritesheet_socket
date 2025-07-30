@@ -2,10 +2,30 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+
+// Load settings from JSON file
+let settings;
+try {
+  const settingsData = fs.readFileSync("settings.json", "utf8");
+  settings = JSON.parse(settingsData);
+  console.log("Settings loaded successfully");
+} catch (error) {
+  console.error("Error loading settings.json:", error.message);
+  console.log("Using default settings");
+  // Fallback default settings
+  settings = {
+    colors: ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FECA57"],
+    server: { port: 3000, enableLogging: true },
+  };
+}
+
+// Store client colors
+const clientColors = new Map();
 
 // Serve static files from public directory
 app.use(express.static("public"));
@@ -21,14 +41,41 @@ app.get("/display", (req, res) => {
 
 // Socket.IO connection handling
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  if (settings.server.enableLogging) {
+    console.log("User connected:", socket.id);
+  }
+
+  // Assign a random color to new client
+  const randomColor = settings.colors[Math.floor(Math.random() * settings.colors.length)];
+  clientColors.set(socket.id, randomColor);
+
+  // Send the assigned color and canvas settings to the client
+  socket.emit("assigned-color", {
+    color: randomColor,
+    canvasSettings: settings.canvas,
+    drawingSettings: settings.drawing,
+    uiSettings: settings.ui,
+  });
+
+  if (settings.server.enableLogging) {
+    console.log(`Assigned color ${randomColor} to client ${socket.id}`);
+  }
 
   // Handle drawing data
   socket.on("drawing", (data) => {
+    // Add client ID and their assigned color to the drawing data
+    data.clientId = socket.id;
+    data.color = clientColors.get(socket.id) || "#000000";
     // Broadcast to display clients only
-    socket.broadcast.to("display").emit("drawing", data);
-    // Also broadcast to other display clients in case multiple displays
     io.to("display").emit("drawing", data);
+  });
+
+  // Handle mouse/touch position updates
+  socket.on("cursor-position", (data) => {
+    // Add client ID and their assigned color
+    data.clientId = socket.id;
+    data.color = clientColors.get(socket.id) || "#000000";
+    io.to("display").emit("cursor-position", data);
   });
 
   // Handle clear canvas
@@ -43,11 +90,19 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    if (settings.server.enableLogging) {
+      console.log("User disconnected:", socket.id);
+    }
+    // Remove client color from memory
+    clientColors.delete(socket.id);
+    // Tell display clients to remove this cursor
+    io.to("display").emit("client-disconnected", { clientId: socket.id });
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || settings.server.port;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Available colors: ${settings.colors.length}`);
+  console.log(`Canvas size: ${settings.canvas.width}x${settings.canvas.height}`);
 });

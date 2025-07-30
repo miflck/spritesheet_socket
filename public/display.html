@@ -49,14 +49,21 @@
     <script>
       let socket;
       let statusElement;
+      let clientCursors = {}; // Store cursor positions for each client
+      let settings = {
+        canvas: { width: 800, height: 600, backgroundColor: "#FFFFFF" },
+        drawing: { cursorSize: 20, cursorOpacity: "99" },
+        ui: { clientIdLength: 8, cursorIdLength: 6, statusUpdateDelay: 500, clearStatusDelay: 2000 },
+        server: { cursorInactiveTimeout: 5000 },
+      };
 
       function setup() {
-        // Create canvas and attach to container
-        let canvas = createCanvas(800, 600);
+        // Create canvas using default settings (will be updated when clients send settings)
+        let canvas = createCanvas(settings.canvas.width, settings.canvas.height);
         canvas.parent("canvasContainer");
 
         // Set background
-        background(255);
+        background(settings.canvas.backgroundColor);
 
         // Get status element
         statusElement = document.getElementById("status");
@@ -77,11 +84,12 @@
         socket.on("disconnect", () => {
           statusElement.textContent = "Disconnected from server";
           statusElement.style.backgroundColor = "#f5e8e8";
+          clientCursors = {}; // Clear cursors on disconnect
         });
 
         // Listen for drawing data from all drawing clients
         socket.on("drawing", (data) => {
-          // Draw the line from drawing clients
+          // Draw the line with the client's assigned color
           stroke(data.color);
           strokeWeight(data.weight);
           line(data.x1, data.y1, data.x2, data.y2);
@@ -92,20 +100,80 @@
           // Reset status after a brief moment
           setTimeout(() => {
             statusElement.textContent = "Connected - Listening for drawings...";
-          }, 500);
+          }, settings.ui.statusUpdateDelay);
+        });
+
+        // Listen for cursor position updates
+        socket.on("cursor-position", (data) => {
+          // Store cursor position and color for this client
+          clientCursors[data.clientId] = {
+            x: data.x,
+            y: data.y,
+            color: data.color,
+            lastSeen: Date.now(),
+          };
+        });
+
+        // Handle client disconnections
+        socket.on("client-disconnected", (data) => {
+          // Remove cursor for disconnected client
+          delete clientCursors[data.clientId];
         });
 
         // Handle clear canvas from drawing clients
         socket.on("clear", () => {
-          background(255);
+          background(settings.canvas.backgroundColor);
           statusElement.textContent = "Canvas cleared by drawing client";
 
           setTimeout(() => {
             statusElement.textContent = "Connected - Listening for drawings...";
-          }, 2000);
+          }, settings.ui.clearStatusDelay);
         });
 
         console.log("Display view initialized");
+      }
+
+      function draw() {
+        // Don't clear the background - we want to keep the drawings
+
+        // Draw cursors for each connected client
+        for (let clientId in clientCursors) {
+          let cursor = clientCursors[clientId];
+
+          // Remove old cursors (inactive for more than configured timeout)
+          if (Date.now() - cursor.lastSeen > settings.server.cursorInactiveTimeout) {
+            delete clientCursors[clientId];
+            continue;
+          }
+
+          // Draw cursor indicator with client's color
+          push();
+
+          // Cursor circle with client's assigned color
+          fill(cursor.color + settings.drawing.cursorOpacity); // Add transparency
+          stroke(cursor.color);
+          strokeWeight(2);
+          ellipse(cursor.x, cursor.y, settings.drawing.cursorSize, settings.drawing.cursorSize);
+
+          // Client ID text (if enabled)
+          if (settings.ui.showClientIds) {
+            fill(255);
+            stroke(0);
+            strokeWeight(1);
+            textAlign(CENTER, CENTER);
+            textSize(10);
+            text(clientId.substring(0, settings.ui.cursorIdLength), cursor.x, cursor.y);
+
+            // Client ID label above cursor with client's color
+            fill(cursor.color);
+            noStroke();
+            textAlign(LEFT, BOTTOM);
+            textSize(12);
+            text("ID: " + clientId.substring(0, settings.ui.clientIdLength), cursor.x + 15, cursor.y - 5);
+          }
+
+          pop();
+        }
       }
 
       // Disable all mouse interactions

@@ -1,0 +1,41 @@
+{
+  "colors": [
+    "#FF6B6B",
+    "#4ECDC4",
+    "#45B7D1",
+    "#96CEB4",
+    "#FECA57",
+    "#FF9FF3",
+    "#54A0FF",
+    "#5F27CD",
+    "#00D2D3",
+    "#FF9F43",
+    "#10AC84",
+    "#EE5A6F",
+    "#C44569",
+    "#F8B500",
+    "#6C5CE7"
+  ],
+  "canvas": {
+    "width": 800,
+    "height": 600,
+    "backgroundColor": "#FFFFFF"
+  },
+  "drawing": {
+    "strokeWeight": 3,
+    "cursorSize": 20,
+    "cursorOpacity": "99"
+  },
+  "ui": {
+    "showClientIds": true,
+    "clientIdLength": 8,
+    "cursorIdLength": 6,
+    "statusUpdateDelay": 500,
+    "clearStatusDelay": 2000
+  },
+  "server": {
+    "port": 3000,
+    "cursorInactiveTimeout": 5000,
+    "enableLogging": true
+  }
+}

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Collaborative Drawing</title>
+    <title>Drawing Canvas (Backend)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
@@ -41,22 +41,64 @@
       let socket;
       let drawing = false;
       let prevX, prevY;
+      let lastMouseX = -1;
+      let lastMouseY = -1;
+      let myColor = "#000000"; // Default color until server assigns one
+      let canvasSettings = { width: 800, height: 600, backgroundColor: "#FFFFFF" };
+      let drawingSettings = { strokeWeight: 3 };
+      let uiSettings = { showClientIds: true };
 
       function setup() {
-        // Create canvas and attach to container
-        let canvas = createCanvas(800, 600);
+        // Create canvas using default settings first
+        let canvas = createCanvas(canvasSettings.width, canvasSettings.height);
         canvas.parent("canvasContainer");
 
-        // Set background
-        background(255);
+        // Set background - convert hex to P5.js format
+        background(canvasSettings.backgroundColor);
 
         // Initialize socket connection
         socket = io();
 
-        // Remove the listener for other users' drawings
-        // This view only shows your own drawing
+        // Listen for assigned color and settings from server
+        socket.on("assigned-color", (data) => {
+          myColor = data.color;
+
+          // Update settings from server if provided
+          if (data.canvasSettings) {
+            canvasSettings = data.canvasSettings;
+            // Resize canvas if settings changed
+            resizeCanvas(canvasSettings.width, canvasSettings.height);
+            background(canvasSettings.backgroundColor);
+          }
+          if (data.drawingSettings) {
+            drawingSettings = data.drawingSettings;
+          }
+          if (data.uiSettings) {
+            uiSettings = data.uiSettings;
+          }
+
+          console.log("Assigned color:", myColor);
+          console.log("Canvas settings:", canvasSettings);
+
+          // Update page background to show assigned color
+          document.body.style.borderTop = `5px solid ${myColor}`;
+        });
 
         console.log("Drawing canvas initialized");
+      }
+
+      function mouseMoved() {
+        // Only send cursor position if mouse actually moved and is within canvas
+        if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+          if (mouseX !== lastMouseX || mouseY !== lastMouseY) {
+            socket.emit("cursor-position", {
+              x: mouseX,
+              y: mouseY,
+            });
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
+          }
+        }
       }
 
       function mousePressed() {
@@ -69,19 +111,18 @@
 
       function mouseDragged() {
         if (drawing && mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
-          // Draw locally
-          stroke(0);
-          strokeWeight(3);
+          // Draw locally with assigned color and settings
+          stroke(myColor);
+          strokeWeight(drawingSettings.strokeWeight);
           line(prevX, prevY, mouseX, mouseY);
 
-          // Send drawing data to server
+          // Send drawing data to server (server will add clientId and color)
           socket.emit("drawing", {
             x1: prevX,
             y1: prevY,
             x2: mouseX,
             y2: mouseY,
-            color: 0,
-            weight: 3,
+            weight: drawingSettings.strokeWeight,
           });
 
           // Update previous position
@@ -98,7 +139,7 @@
       function keyPressed() {
         // Clear canvas on spacebar
         if (key === " ") {
-          background(255);
+          background(canvasSettings.backgroundColor);
           socket.emit("clear");
         }
       }
