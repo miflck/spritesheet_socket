@@ -6,6 +6,7 @@
     <title>Display View - All Drawings</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="dragon.js"></script>
     <style>
       body {
         margin: 0;
@@ -40,7 +41,7 @@
   <body>
     <h1>Display View - All Drawings</h1>
     <div class="info">
-      <p>This view shows all drawings from connected users in real-time.</p>
+      <p>This view shows dragons following each connected user's cursor in real-time.</p>
       <p>Open drawing clients at: <a href="/" target="_blank">/</a></p>
     </div>
     <div class="status" id="status">Connecting to server...</div>
@@ -49,12 +50,13 @@
     <script>
       let socket;
       let statusElement;
-      let clientCursors = {}; // Store cursor positions for each client
+      let dragons = {}; // Store dragon instances for each client
       let settings = {
         canvas: { width: 800, height: 600, backgroundColor: "#FFFFFF" },
         drawing: { cursorSize: 20, cursorOpacity: "99" },
         ui: { clientIdLength: 8, cursorIdLength: 6, statusUpdateDelay: 500, clearStatusDelay: 2000 },
         server: { cursorInactiveTimeout: 5000 },
+        dragon: { segNum: 20, segLength: 18, strokeWeight: 9, opacity: 180 },
       };
 
       function setup() {
@@ -76,7 +78,7 @@
 
         // Handle connection status
         socket.on("connect", () => {
-          statusElement.textContent = "Connected - Listening for drawings...";
+          statusElement.textContent = "Connected - Listening for dragons...";
           statusElement.style.backgroundColor = "#e8f5e8";
           console.log("Connected to server as display client");
         });
@@ -84,7 +86,7 @@
         socket.on("disconnect", () => {
           statusElement.textContent = "Disconnected from server";
           statusElement.style.backgroundColor = "#f5e8e8";
-          clientCursors = {}; // Clear cursors on disconnect
+          dragons = {}; // Clear dragons on disconnect
         });
 
         // Listen for drawing data from all drawing clients
@@ -103,21 +105,27 @@
           }, settings.ui.statusUpdateDelay);
         });
 
-        // Listen for cursor position updates
+        // Listen for cursor position updates - create/update dragons
         socket.on("cursor-position", (data) => {
-          // Store cursor position and color for this client
-          clientCursors[data.clientId] = {
-            x: data.x,
-            y: data.y,
-            color: data.color,
-            lastSeen: Date.now(),
-          };
+          const clientId = data.clientId;
+
+          // Create dragon if it doesn't exist
+          if (!dragons[clientId]) {
+            dragons[clientId] = new Dragon(clientId, data.color, settings.dragon);
+            console.log(`Created dragon for client ${clientId}`);
+          }
+
+          // Update dragon target position
+          dragons[clientId].updateTarget(data.x, data.y);
         });
 
-        // Handle client disconnections
+        // Handle client disconnections - remove dragons
         socket.on("client-disconnected", (data) => {
-          // Remove cursor for disconnected client
-          delete clientCursors[data.clientId];
+          // Remove dragon for disconnected client
+          if (dragons[data.clientId]) {
+            delete dragons[data.clientId];
+            console.log(`Removed dragon for client ${data.clientId}`);
+          }
         });
 
         // Handle clear canvas from drawing clients
@@ -134,45 +142,36 @@
       }
 
       function draw() {
-        // Don't clear the background - we want to keep the drawings
+        // Clear background each frame
+        background(settings.canvas.backgroundColor);
 
-        // Draw cursors for each connected client
-        for (let clientId in clientCursors) {
-          let cursor = clientCursors[clientId];
+        // Update and draw all dragons
+        for (let clientId in dragons) {
+          let dragon = dragons[clientId];
 
-          // Remove old cursors (inactive for more than configured timeout)
-          if (Date.now() - cursor.lastSeen > settings.server.cursorInactiveTimeout) {
-            delete clientCursors[clientId];
+          // Remove inactive dragons
+          if (dragon.isInactive(settings.server.cursorInactiveTimeout)) {
+            delete dragons[clientId];
+            console.log(`Removed inactive dragon for client ${clientId}`);
             continue;
           }
 
-          // Draw cursor indicator with client's color
-          push();
+          // Update dragon movement
+          dragon.update();
 
-          // Cursor circle with client's assigned color
-          fill(cursor.color + settings.drawing.cursorOpacity); // Add transparency
-          stroke(cursor.color);
-          strokeWeight(2);
-          ellipse(cursor.x, cursor.y, settings.drawing.cursorSize, settings.drawing.cursorSize);
+          // Draw the dragon
+          dragon.draw();
 
-          // Client ID text (if enabled)
-          if (settings.ui.showClientIds) {
-            fill(255);
-            stroke(0);
-            strokeWeight(1);
-            textAlign(CENTER, CENTER);
-            textSize(10);
-            text(clientId.substring(0, settings.ui.cursorIdLength), cursor.x, cursor.y);
-
-            // Client ID label above cursor with client's color
-            fill(cursor.color);
+          // Draw client ID near dragon head (optional)
+          if (settings.ui.showClientIds && dragon.isActive) {
+            push();
+            fill(dragon.color);
             noStroke();
             textAlign(LEFT, BOTTOM);
             textSize(12);
-            text("ID: " + clientId.substring(0, settings.ui.clientIdLength), cursor.x + 15, cursor.y - 5);
+            text("ID: " + clientId.substring(0, settings.ui.clientIdLength), dragon.x[0] + 15, dragon.y[0] - 5);
+            pop();
           }
-
-          pop();
         }
       }
 
