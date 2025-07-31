@@ -8,6 +8,7 @@ let manifest;
 
 function preload() {
   settings = loadJSON("settings.json");
+  // get all path for any dragon images
   manifest = loadJSON("assets/manifest.json");
 }
 
@@ -127,12 +128,13 @@ function draw() {
 
     // Draw client ID near dragon head (optional)
     if (settings.ui.showClientIds && dragon.isActive) {
+      const headPosition = dragon.getHeadPosition();
       push();
       fill(dragon.color);
       noStroke();
       textAlign(LEFT, BOTTOM);
       textSize(12);
-      text("ID: " + clientId.substring(0, settings.ui.clientIdLength), dragon.x[0] + 15, dragon.y[0] - 5);
+      text("ID: " + clientId.substring(0, settings.ui.clientIdLength), headPosition.x + 15, headPosition.y - 5);
       pop();
     }
   }
