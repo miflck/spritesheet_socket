@@ -16,6 +16,7 @@
     "#F8B500",
     "#6C5CE7"
   ],
+
   "canvas": {
     "width": "windowWidth",
     "height": "windowHeight",
@@ -26,8 +27,7 @@
 
   "drawing": {
     "strokeWeight": 5,
-    "cursorSize": 20,
-    "cursorOpacity": "99"
+    "cursorSize": 20
   },
 
   "dragon": {
@@ -35,15 +35,18 @@
     "segNum": 30,
     "segLength": 15,
     "strokeWeight": 9,
+    "maxStrokeWeight": 15,
+    "minStrokeWeidth": 9,
     "opacity": 180,
     "easing": 0.05,
     "segmentEasing": 0.5
   },
 
   "ui": {
-    "showClientIds": true,
+    "showClientIds": false,
     "clientIdLength": 8
   },
+
   "server": {
     "port": 3000,
     "cursorInactiveTimeout": 20000,

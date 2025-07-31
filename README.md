@@ -107,7 +107,6 @@ Edit `settings.json` to customize:
 "drawing": {
   "strokeWeight": 5,           // Brush thickness
   "cursorSize": 20,           // Cursor size
-  "cursorOpacity": "99"       // Cursor opacity
 }
 ```
 

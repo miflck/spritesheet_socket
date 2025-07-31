@@ -9,7 +9,9 @@ class Dragon {
     this.config = {
       segNum: options.segNum || 20,
       segLength: options.segLength || 18,
-      strokeWeight: options.strokeWeight || 9,
+      strokeWeight: options.strokeWeight || 9, // This becomes maxStrokeWeight for backward compatibility
+      maxStrokeWeight: options.maxStrokeWeight || options.strokeWeight || 9, // Thickest at head
+      minStrokeWeight: options.minStrokeWeight || 9,
       opacity: options.opacity || 100,
       timeOut: options.timeOut || 3000,
       headSize: options.headSize || 100,
@@ -84,6 +86,8 @@ class Dragon {
       currentPosition: { x: this.x, y: this.y },
       targetPosition: { x: this.targetX, y: this.targetY },
       angle: this.angle,
+      maxStrokeWeight: this.config.maxStrokeWeight,
+      minStrokeWeight: this.config.minStrokeWeight,
     };
   }
 
@@ -126,27 +130,36 @@ class Dragon {
     this.segY[index] = lerp(this.segY[index], idealY, flexibility);
   }
 
+  _getStrokeWeightForSegment(segmentIndex) {
+    // Calculate progress from head (0) to tail (1)
+    const progress = segmentIndex / (this.segX.length - 1);
+
+    // Interpolate between max and min stroke weight
+    return lerp(this.config.maxStrokeWeight, this.config.minStrokeWeight, progress);
+  }
+
   _drawBody() {
     const colorWithOpacity = this.color + this._getOpacityHex();
-
-    strokeWeight(this.config.strokeWeight);
-    stroke(colorWithOpacity);
     noFill();
+    stroke(colorWithOpacity);
 
-    // Draw line from current position to first segment
+    // Draw line from current position to first segment with max stroke weight
+    strokeWeight(this.config.maxStrokeWeight);
     line(this.x, this.y, this.segX[0], this.segY[0]);
 
-    // Draw lines between segments
+    // Draw lines between segments with gradually decreasing stroke weight
     for (let i = 0; i < this.segX.length - 1; i++) {
+      const strokeWeightForThisSegment = this._getStrokeWeightForSegment(i);
+      strokeWeight(strokeWeightForThisSegment);
       line(this.segX[i], this.segY[i], this.segX[i + 1], this.segY[i + 1]);
     }
   }
 
   _drawHead() {
-    // Draw head base at current position
+    // Draw head base at current position with max stroke weight size
     fill(this.color);
     noStroke();
-    ellipse(this.x, this.y, this.config.strokeWeight * 1.5);
+    ellipse(this.x, this.y, this.config.maxStrokeWeight * 1.5);
 
     // Draw head image with rotation and flipping
     push();
