@@ -14,6 +14,7 @@ class Dragon {
       timeOut: options.timeOut || 3000,
       headSize: options.headSize || 100,
       easing: options.easing || 0.05, // Simple easing factor
+      segmentEasing: options.segmentEasing || 0.5,
     };
 
     // Initialize segments (maintain original property structure)
@@ -115,8 +116,14 @@ class Dragon {
     const dy = targetY - this.segY[index];
     const angle = atan2(dy, dx);
 
-    this.segX[index] = targetX - cos(angle) * this.config.segLength;
-    this.segY[index] = targetY - sin(angle) * this.config.segLength;
+    const idealX = targetX - cos(angle) * this.config.segLength;
+    const idealY = targetY - sin(angle) * this.config.segLength;
+
+    // Make segments further from head more flexible
+    const flexibility = this.config.segmentEasing + index * 0.01; // Tail is more flexible
+
+    this.segX[index] = lerp(this.segX[index], idealX, flexibility);
+    this.segY[index] = lerp(this.segY[index], idealY, flexibility);
   }
 
   _drawBody() {

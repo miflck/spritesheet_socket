@@ -36,7 +36,8 @@
     "segLength": 15,
     "strokeWeight": 9,
     "opacity": 180,
-    "easing": 0.05
+    "easing": 0.05,
+    "segmentEasing": 0.5
   },
 
   "ui": {
