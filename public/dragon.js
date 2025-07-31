@@ -1,7 +1,8 @@
 class Dragon {
-  constructor(clientId, color, options = {}) {
+  constructor(clientId, color, head, options = {}) {
     this.clientId = clientId;
     this.color = color;
+    this.head = head;
 
     // Dragon configuration
     this.segNum = options.segNum || 20;
@@ -9,7 +10,7 @@ class Dragon {
     this.strokeWeight = options.strokeWeight || 9;
     this.opacity = options.opacity || 100;
     this.timeOut = options.timeOut || 3000;
-
+    this.headSize = options.headSize || 100;
     // Initialize segment positions
     this.x = [];
     this.y = [];
@@ -66,6 +67,21 @@ class Dragon {
     fill(this.color);
     noStroke();
     ellipse(this.targetX, this.targetY, this.strokeWeight * 1.5);
+    push();
+    translate(this.targetX, this.targetY);
+    const dx = this.x[0] - this.targetX;
+    const dy = this.y[0] - this.targetY;
+    let angle = atan2(dy, dx);
+    // Check if dragging to the right (dx < 0 means target is to the right of current position)
+    const flipImage = dx < 0;
+    if (flipImage) {
+      scale(-1, 1); // Flip horizontally
+      angle = PI - angle; // or you could use: angle = -angle + PI
+    }
+    rotate(angle);
+
+    image(this.head, -this.headSize / 2, -this.headSize / 2, this.headSize, this.headSize);
+    pop();
     pop();
   }
 

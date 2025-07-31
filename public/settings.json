@@ -40,5 +40,11 @@
     "cursorInactiveTimeout": 5000,
     "enableLogging": true
   },
-  "dragon": { "segNum": 20, "segLength": 18, "strokeWeight": 9, "opacity": 180 }
+  "dragon": {
+    "headSize": 100,
+    "segNum": 20,
+    "segLength": 18,
+    "strokeWeight": 9,
+    "opacity": 180
+  }
 }

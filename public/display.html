@@ -53,6 +53,10 @@
       let dragons = {}; // Store dragon instances for each client
       let settings;
 
+      let images = [];
+      let manifest;
+      let head;
+
       // Helper function to denormalize coordinates (convert from 0-1 to canvas pixels)
       function denormalizeCoords(normalizedX, normalizedY) {
         return {
@@ -63,9 +67,18 @@
 
       function preload() {
         settings = loadJSON("settings.json");
+        head = loadImage("assets/1.png");
+        manifest = loadJSON("assets/manifest.json");
       }
 
       function setup() {
+        // Load all PNG images from the manifest
+        for (let filename of manifest.images) {
+          let img = loadImage("assets/" + filename);
+          images.push(img);
+        }
+
+        console.log(`Loaded ${images.length} images`);
         // Create canvas using default settings (will be updated when clients send settings)
         let canvas = createCanvas(settings.canvas.displayWidth, settings.canvas.displayHeight);
         canvas.parent("canvasContainer");
@@ -112,7 +125,7 @@
 
           // Create dragon if it doesn't exist
           if (!dragons[clientId]) {
-            dragons[clientId] = new Dragon(clientId, data.color, settings.dragon);
+            dragons[clientId] = new Dragon(clientId, data.color, head, settings.dragon);
             console.log(`Created dragon for client ${clientId}`);
           }
 
@@ -129,7 +142,7 @@
 
           // Create dragon if it doesn't exist
           if (!dragons[clientId]) {
-            dragons[clientId] = new Dragon(clientId, data.color, settings.dragon);
+            dragons[clientId] = new Dragon(clientId, data.color, random(images), settings.dragon);
             console.log(`Created dragon for client ${clientId}`);
           }
 
