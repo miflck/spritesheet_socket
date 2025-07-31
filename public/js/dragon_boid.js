@@ -13,7 +13,6 @@ class Dragon {
       opacity: options.opacity || 100,
       timeOut: options.timeOut || 3000,
       headSize: options.headSize || 100,
-      easing: options.easing || 0.05, // Simple easing factor
     };
 
     // Initialize segments (maintain original property structure)
@@ -21,22 +20,22 @@ class Dragon {
     this.y = [];
     this._initializeSegments();
 
-    // Simple position and target
-    this.x = 0;
-    this.y = 0;
-    this.targetX = 0;
-    this.targetY = 0;
-    this.angle = 0;
+    // Vehicle physics (exactly like Boid)
+    this.position = createVector(0, 0);
+    this.velocity = createVector(random(-1, 1), random(-1, 1));
+    this.acceleration = createVector(0, 0);
+    this.maxSpeed = options.maxSpeed || 20;
+    this.maxForce = options.maxForce || 0.2;
 
-    // State
+    // Target and state
+    this.target = createVector(0, 0);
     this.isActive = false;
     this.lastUpdate = Date.now();
   }
 
   // Public methods
   updateTarget(x, y) {
-    this.targetX = x;
-    this.targetY = y;
+    this.target.set(x, y);
     this.isActive = true;
     this.lastUpdate = Date.now();
   }
@@ -48,13 +47,15 @@ class Dragon {
   update() {
     if (!this.isActive) return;
 
-    // Simple easing toward target
-    let dx = this.targetX - this.x;
-    let dy = this.targetY - this.y;
-    this.angle = atan2(dy, dx);
+    // Apply arrive behavior toward target
+    let arriveForce = this.arrive(this.target);
+    this.applyForce(arriveForce);
 
-    this.x += dx * this.config.easing;
-    this.y += dy * this.config.easing;
+    // Update physics (exactly like Boid)
+    this.velocity.add(this.acceleration);
+    this.velocity.limit(this.maxSpeed);
+    this.position.add(this.velocity);
+    this.acceleration.mult(0);
 
     // Update segment chain using current position
     this._updateSegmentChain();
@@ -71,6 +72,8 @@ class Dragon {
 
   deactivate() {
     this.isActive = false;
+    this.velocity.mult(0);
+    this.acceleration.mult(0);
   }
 
   getInfo() {
@@ -79,44 +82,75 @@ class Dragon {
       color: this.color,
       segNum: this.config.segNum,
       isActive: this.isActive,
-      headPosition: { x: this.segX[0], y: this.segY[0] },
-      currentPosition: { x: this.x, y: this.y },
-      targetPosition: { x: this.targetX, y: this.targetY },
-      angle: this.angle,
+      headPosition: { x: this.x[0], y: this.y[0] },
+      currentPosition: { x: this.position.x, y: this.position.y },
+      targetPosition: { x: this.target.x, y: this.target.y },
+      velocity: { x: this.velocity.x, y: this.velocity.y },
+      currentSpeed: this.velocity.mag(),
     };
   }
 
   getHeadPosition() {
-    return { x: this.segX[0], y: this.segY[0] };
+    return { x: this.x[0], y: this.y[0] };
+  }
+
+  // Physics methods (exactly like Boid)
+  applyForce(force) {
+    this.acceleration.add(force);
+  }
+
+  seek(target) {
+    let desired = p5.Vector.sub(target, this.position);
+    desired.setMag(this.maxSpeed);
+
+    let steer = p5.Vector.sub(desired, this.velocity);
+    steer.limit(this.maxForce);
+
+    return steer;
+  }
+
+  arrive(target, slowingRadius = 200) {
+    let desired = p5.Vector.sub(target, this.position);
+    let distance = desired.mag();
+
+    if (distance < slowingRadius) {
+      let speed = map(distance, 0, slowingRadius, 0, this.maxSpeed);
+      desired.setMag(speed);
+    } else {
+      desired.setMag(this.maxSpeed);
+    }
+
+    let steer = p5.Vector.sub(desired, this.velocity);
+    steer.limit(this.maxForce);
+
+    return steer;
   }
 
   // Private methods
   _initializeSegments() {
-    this.segX = [];
-    this.segY = [];
     for (let i = 0; i < this.config.segNum; i++) {
-      this.segX[i] = 0;
-      this.segY[i] = 0;
+      this.x[i] = 0;
+      this.y[i] = 0;
     }
   }
 
   _updateSegmentChain() {
     // Move head segment toward current position
-    this._dragSegment(0, this.x, this.y);
+    this._dragSegment(0, this.position.x, this.position.y);
 
     // Each subsequent segment follows the previous one
-    for (let i = 0; i < this.segX.length - 1; i++) {
-      this._dragSegment(i + 1, this.segX[i], this.segY[i]);
+    for (let i = 0; i < this.x.length - 1; i++) {
+      this._dragSegment(i + 1, this.x[i], this.y[i]);
     }
   }
 
   _dragSegment(index, targetX, targetY) {
-    const dx = targetX - this.segX[index];
-    const dy = targetY - this.segY[index];
+    const dx = targetX - this.x[index];
+    const dy = targetY - this.y[index];
     const angle = atan2(dy, dx);
 
-    this.segX[index] = targetX - cos(angle) * this.config.segLength;
-    this.segY[index] = targetY - sin(angle) * this.config.segLength;
+    this.x[index] = targetX - cos(angle) * this.config.segLength;
+    this.y[index] = targetY - sin(angle) * this.config.segLength;
   }
 
   _drawBody() {
@@ -127,11 +161,11 @@ class Dragon {
     noFill();
 
     // Draw line from current position to first segment
-    line(this.x, this.y, this.segX[0], this.segY[0]);
+    line(this.position.x, this.position.y, this.x[0], this.y[0]);
 
     // Draw lines between segments
-    for (let i = 0; i < this.segX.length - 1; i++) {
-      line(this.segX[i], this.segY[i], this.segX[i + 1], this.segY[i + 1]);
+    for (let i = 0; i < this.x.length - 1; i++) {
+      line(this.x[i], this.y[i], this.x[i + 1], this.y[i + 1]);
     }
   }
 
@@ -139,11 +173,11 @@ class Dragon {
     // Draw head base at current position
     fill(this.color);
     noStroke();
-    ellipse(this.x, this.y, this.config.strokeWeight * 1.5);
+    ellipse(this.position.x, this.position.y, this.config.strokeWeight * 1.5);
 
     // Draw head image with rotation and flipping
     push();
-    translate(this.x, this.y);
+    translate(this.position.x, this.position.y);
 
     const { angle, shouldFlip } = this._calculateHeadOrientation();
 
@@ -157,8 +191,8 @@ class Dragon {
   }
 
   _calculateHeadOrientation() {
-    const dx = this.segX[0] - this.x;
-    const dy = this.segY[0] - this.y;
+    const dx = this.x[0] - this.position.x;
+    const dy = this.y[0] - this.position.y;
     let angle = atan2(dy, dx);
 
     const shouldFlip = dx < 0;
