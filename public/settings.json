@@ -35,7 +35,8 @@
     "segNum": 30,
     "segLength": 15,
     "strokeWeight": 9,
-    "opacity": 180
+    "opacity": 180,
+    "easing": 0.05
   },
 
   "ui": {
@@ -44,7 +45,7 @@
   },
   "server": {
     "port": 3000,
-    "cursorInactiveTimeout": 5000,
+    "cursorInactiveTimeout": 20000,
     "enableLogging": true
   }
 }
