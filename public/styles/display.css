@@ -2,38 +2,19 @@ body {
   margin: 0;
   padding: 0px;
   font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
-}
-
-h1 {
-  text-align: center;
-  color: #333;
+  background-color: #909090;
 }
 
 #canvasContainer {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
-}
-
-.info {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #666;
-}
-
-.info a {
-  color: #007bff;
-  text-decoration: none;
-}
-
-.info a:hover {
-  text-decoration: underline;
+  margin-top: 0px;
 }
 
 .status {
+  position: absolute;
   text-align: center;
-  margin-bottom: 10px;
+
   padding: 10px;
   background-color: #e8f5e8;
   border-radius: 5px;

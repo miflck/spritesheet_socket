@@ -4,7 +4,7 @@ let prevX, prevY;
 let lastMouseX = -1;
 let lastMouseY = -1;
 let myColor = "#000000"; // Default color until server assigns one
-let canvasSettings = { width: 800, height: 600, backgroundColor: "#FFFFFF" };
+let canvasSettings = { width: 800, height: 600, backgroundColor: "red" };
 let drawingSettings = { strokeWeight: 3 };
 let uiSettings = { showClientIds: true };
 
@@ -26,7 +26,7 @@ function denormalizeCoords(normalizedX, normalizedY) {
 
 function setup() {
   // Create canvas using default settings first
-  let canvas = createCanvas(windowWidth, windowHeight);
+  let canvas = createCanvas(100, 100);
   canvas.parent("canvasContainer");
 
   // Set background - convert hex to P5.js format
@@ -63,11 +63,9 @@ function setup() {
   // Listen for assigned color and settings from server
   socket.on("assigned-color", (data) => {
     myColor = data.color;
-
     // Update settings from server if provided
     if (data.canvasSettings) {
       canvasSettings = data.canvasSettings;
-
       // Resize canvas if settings changed
       resizeCanvas(eval(canvasSettings.width), eval(canvasSettings.height));
       background(canvasSettings.backgroundColor);
@@ -80,10 +78,8 @@ function setup() {
     }
 
     console.log("Assigned color:", myColor);
-    console.log("Canvas settings:", canvasSettings);
-
-    // Update page background to show assigned color
-    document.body.style.borderTop = `5px solid ${myColor}`;
+    console.log("Canvas settings2:", data.canvasSettings);
+    background(canvasSettings.backgroundColor);
   });
 
   console.log("Drawing canvas initialized");

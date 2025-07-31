@@ -5,19 +5,9 @@ let settings;
 
 let images = [];
 let manifest;
-let head;
-
-// Helper function to denormalize coordinates (convert from 0-1 to canvas pixels)
-function denormalizeCoords(normalizedX, normalizedY) {
-  return {
-    x: map(normalizedX, 0, 1, 0, width),
-    y: map(normalizedY, 0, 1, 0, height),
-  };
-}
 
 function preload() {
   settings = loadJSON("settings.json");
-  head = loadImage("assets/1.png");
   manifest = loadJSON("assets/manifest.json");
 }
 
@@ -64,7 +54,7 @@ function setup() {
 
     // Create dragon if it doesn't exist
     if (!dragons[clientId]) {
-      dragons[clientId] = new Dragon(clientId, data.color, head, settings.dragon);
+      dragons[clientId] = new Dragon(clientId, data.color, random(images), settings.dragon);
       console.log(`Created dragon for client ${clientId}`);
     }
 
@@ -164,4 +154,12 @@ function mouseReleased() {
 // Disable keyboard interactions
 function keyPressed() {
   return false;
+}
+
+// Helper function to denormalize coordinates (convert from 0-1 to canvas pixels)
+function denormalizeCoords(normalizedX, normalizedY) {
+  return {
+    x: map(normalizedX, 0, 1, 0, width),
+    y: map(normalizedY, 0, 1, 0, height),
+  };
 }

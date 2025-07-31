@@ -19,32 +19,32 @@
   "canvas": {
     "width": "windowWidth",
     "height": "windowHeight",
-    "backgroundColor": "#FFFFFF",
-    "displayWidth": 800,
-    "displayHeight": 600
+    "backgroundColor": "#000000",
+    "displayWidth": 1920,
+    "displayHeight": 1080
   },
+
   "drawing": {
-    "strokeWeight": 3,
+    "strokeWeight": 5,
     "cursorSize": 20,
     "cursorOpacity": "99"
   },
+
+  "dragon": {
+    "headSize": 100,
+    "segNum": 30,
+    "segLength": 15,
+    "strokeWeight": 9,
+    "opacity": 180
+  },
+
   "ui": {
     "showClientIds": true,
-    "clientIdLength": 8,
-    "cursorIdLength": 6,
-    "statusUpdateDelay": 500,
-    "clearStatusDelay": 2000
+    "clientIdLength": 8
   },
   "server": {
     "port": 3000,
     "cursorInactiveTimeout": 5000,
     "enableLogging": true
-  },
-  "dragon": {
-    "headSize": 100,
-    "segNum": 20,
-    "segLength": 18,
-    "strokeWeight": 9,
-    "opacity": 180
   }
 }

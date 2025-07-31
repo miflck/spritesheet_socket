@@ -11,12 +11,6 @@ body {
   user-select: none;
 }
 
-h1 {
-  text-align: center;
-  color: #333;
-  z-index: 100;
-}
-
 #canvasContainer {
   display: flex;
   justify-content: center;
@@ -33,12 +27,6 @@ h1 {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}
-
-.info {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #666;
 }
 
 /* Prevent selection and dragging on canvas */
