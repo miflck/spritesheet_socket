@@ -14,7 +14,7 @@ class Dragon {
       timeOut: options.timeOut || 3000,
       headSize: options.headSize || 100,
       // Easing configuration
-      easingDuration: options.easingDuration || 1000, // ms for easing animation
+      easingDuration: options.easingDuration || 250, // ms for easing animation
       easingFunction: options.easingFunction || "easeOutCubic",
     };
 
