@@ -7,6 +7,7 @@ let myColor = "#000000"; // Default color until server assigns one
 let canvasSettings = { width: 800, height: 600, backgroundColor: "red" };
 let drawingSettings = { strokeWeight: 3 };
 let uiSettings = { showClientIds: true };
+let myCursor;
 
 // Helper function to normalize coordinates
 function normalizeCoords(x, y) {
@@ -15,6 +16,7 @@ function normalizeCoords(x, y) {
     y: map(y, 0, height, 0, 1),
   };
 }
+31;
 
 // Helper function to denormalize coordinates (for receiving from server)
 function denormalizeCoords(normalizedX, normalizedY) {
@@ -31,6 +33,8 @@ function setup() {
 
   // Set background - convert hex to P5.js format
   background(canvasSettings.backgroundColor);
+  let v = createVector(width / 2, height / 2);
+  myCursor = new CursorCircle(v, 20, "red");
 
   // Prevent default touch behavior on canvas
   canvas.elt.addEventListener(
@@ -80,12 +84,27 @@ function setup() {
     console.log("Assigned color:", myColor);
     console.log("Canvas settings2:", data.canvasSettings);
     background(canvasSettings.backgroundColor);
-  });
 
-  console.log("Drawing canvas initialized");
+    console.log("Drawing canvas initialized");
+    let v = createVector(width / 2, height / 2);
+    myCursor = new CursorCircle(v, 50, myColor);
+  });
+}
+
+function draw() {
+  // Only render cursor if initialized
+  background(canvasSettings.backgroundColor);
+  if (myCursor) {
+    myCursor.render();
+  }
 }
 
 function mouseMoved() {
+  // Update cursor position
+  if (myCursor) {
+    myCursor.updatePosition(createVector(mouseX, mouseY));
+  }
+
   // Only send cursor position if mouse actually moved and is within canvas
   if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
     if (mouseX !== lastMouseX || mouseY !== lastMouseY) {
@@ -96,6 +115,8 @@ function mouseMoved() {
       });
       lastMouseX = mouseX;
       lastMouseY = mouseY;
+
+      myCursor.updatePosition(createVector(mouseX, mouseY));
     }
   }
 }
@@ -131,6 +152,10 @@ function mouseDragged() {
     // Update previous position
     prevX = mouseX;
     prevY = mouseY;
+  }
+  // Update cursor position while dragging
+  if (myCursor) {
+    myCursor.updatePosition(createVector(mouseX, mouseY));
   }
 }
 
@@ -200,6 +225,30 @@ function touchStarted() {
 function touchEnded() {
   drawing = false;
   return false; // Prevent default
+}
+
+class CursorCircle {
+  constructor(position, radius = 20, color = "white") {
+    this.position = position.copy();
+    this.radius = radius;
+    this.color = color;
+  }
+
+  updatePosition(position) {
+    this.position = position.copy();
+  }
+
+  render() {
+    push();
+    fill(this.color + 99);
+    noStroke();
+    circle(this.position.x, this.position.y, this.radius * 2);
+    fill(this.color);
+
+    circle(this.position.x, this.position.y, this.radius * 1.5);
+
+    pop();
+  }
 }
 
 // Optional: Listen for drawing data from other clients (if needed)
