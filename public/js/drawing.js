@@ -208,6 +208,12 @@ function touchMoved() {
       prevY = mouseY;
     }
   }
+
+  // Update cursor position while dragging
+  if (myCursor) {
+    myCursor.updatePosition(createVector(mouseX, mouseY));
+  }
+
   // Prevent default scrolling behavior
   return false;
 }
