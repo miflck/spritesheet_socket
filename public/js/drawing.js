@@ -238,6 +238,80 @@ class CursorCircle {
     this.position = position.copy();
     this.radius = radius;
     this.color = color;
+    this.triangleSize = radius * 0.4;
+    this.triangleDistance = radius * 1.5;
+
+    // Triangle animation properties
+    this.startTime = millis();
+    this.blinkStarted = false;
+    this.triangleOpacity = 0;
+    this.fadeSpeed = 7; // How fast triangles fade in/out
+    this.fadingIn = true; // Track if we're fading in or out
+  }
+
+  updateTriangles() {
+    let elapsed = millis() - this.startTime;
+
+    // Start blinking after 3 seconds
+    if (elapsed < 5000 && !this.blinkStarted) {
+      this.blinkStarted = true;
+      this.triangleOpacity = 0;
+      this.fadingIn = true;
+    }
+
+    // Start blinking after 3 seconds
+    if (elapsed > 5000 && this.blinkStarted) {
+      this.blinkStarted = false;
+      this.triangleOpacity = 0;
+      this.fadingIn = false;
+    }
+
+    // Create blinking effect (fade in and out cyclically)
+    if (this.blinkStarted) {
+      if (this.fadingIn) {
+        this.triangleOpacity += this.fadeSpeed;
+        if (this.triangleOpacity >= 255) {
+          this.triangleOpacity = 255;
+          this.fadingIn = false; // Switch to fading out
+        }
+      } else {
+        this.triangleOpacity -= this.fadeSpeed;
+        if (this.triangleOpacity <= 0) {
+          this.triangleOpacity = 0;
+          this.fadingIn = true; // Switch to fading in
+        }
+      }
+
+      // Clamp opacity to valid range
+      this.triangleOpacity = constrain(this.triangleOpacity, 0, 255);
+    }
+  }
+
+  renderTriangles() {
+    if (this.triangleOpacity <= 0) return;
+
+    push();
+    fill(red(this.color), green(this.color), blue(this.color), this.triangleOpacity);
+    noStroke();
+
+    let x = this.position.x;
+    let y = this.position.y;
+    let size = this.triangleSize;
+    let dist = this.triangleDistance;
+
+    // Right triangle (pointing left toward center)
+    triangle(x + dist + size, y, x + dist, y - size / 2, x + dist, y + size / 2);
+
+    // Left triangle (pointing right toward center)
+    triangle(x - dist - size, y, x - dist, y - size / 2, x - dist, y + size / 2);
+
+    // Top triangle (pointing down toward center)
+    triangle(x, y - dist - size, x - size / 2, y - dist, x + size / 2, y - dist);
+
+    // Bottom triangle (pointing up toward center)
+    triangle(x, y + dist + size, x - size / 2, y + dist, x + size / 2, y + dist);
+
+    pop();
   }
 
   updatePosition(position) {
@@ -245,15 +319,19 @@ class CursorCircle {
   }
 
   render() {
+    this.updateTriangles();
+
     push();
     fill(this.color + 99);
     noStroke();
     circle(this.position.x, this.position.y, this.radius * 2);
+
     fill(this.color);
-
     circle(this.position.x, this.position.y, this.radius * 1.5);
-
     pop();
+
+    // Render triangles
+    this.renderTriangles();
   }
 }
 
