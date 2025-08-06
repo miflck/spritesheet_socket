@@ -93,7 +93,7 @@ function setup() {
 
 function draw() {
   // Only render cursor if initialized
-  //background(canvasSettings.backgroundColor);
+  background(canvasSettings.backgroundColor);
   if (myCursor) {
     myCursor.render();
   }
