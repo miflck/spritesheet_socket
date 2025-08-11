@@ -39,3 +39,36 @@ canvas {
   -ms-user-select: none;
   user-select: none;
 }
+
+/* Splash screen styles */
+#splashScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: transparent; /* Transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* High z-index to appear above everything */
+  opacity: 1;
+  transition: opacity 1s ease-out;
+  pointer-events: none; /* Prevent interaction during fade */
+}
+
+#splashScreen img {
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain;
+}
+
+/* Animation class to trigger fade out */
+#splashScreen.fade-out {
+  opacity: 0;
+}
+
+/* Hide splash screen after animation completes */
+#splashScreen.hidden {
+  display: none;
+}

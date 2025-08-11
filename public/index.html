@@ -9,7 +9,28 @@
     <link rel="stylesheet" href="styles/drawing.css" />
   </head>
   <body>
+    <!-- Splash Screen -->
+    <div id="splashScreen">
+      <img src="assets/splash.png" alt="Loading..." />
+    </div>
+
     <div id="canvasContainer"></div>
     <script src="js/drawing.js"></script>
+
+    <!-- Splash screen script -->
+    <script>
+      // Wait for page to load, then start splash sequence
+      window.addEventListener("load", function () {
+        setTimeout(function () {
+          const splash = document.getElementById("splashScreen");
+          splash.classList.add("fade-out");
+
+          // Remove splash screen from DOM after fade completes
+          setTimeout(function () {
+            splash.classList.add("hidden");
+          }, 1000); // Match the CSS transition duration
+        }, 3000); // Show for 3 seconds
+      });
+    </script>
   </body>
 </html>
