@@ -9,6 +9,54 @@ let drawingSettings = { strokeWeight: 3 };
 let uiSettings = { showClientIds: true };
 let myCursor;
 
+// Helper functions for responsive canvas sizing
+function getResponsiveWidth() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // In portrait mode, use most of the width
+  if (vh > vw) {
+    return Math.min(vw * 0.95, 600);
+  }
+  // In landscape mode, use a bit less width to account for UI
+  else {
+    return Math.min(vw * 0.7, 800);
+  }
+}
+
+function getResponsiveHeight() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // In portrait mode, use less height to leave room for UI
+  if (vh > vw) {
+    return Math.min(vh * 0.6, 600);
+  }
+  // In landscape mode, use most of the height
+  else {
+    return Math.min(vh * 0.8, 500);
+  }
+}
+
+function handleOrientationChange() {
+  // Small delay to ensure orientation change is complete
+  setTimeout(() => {
+    const newWidth = getResponsiveWidth();
+    const newHeight = getResponsiveHeight();
+
+    // Resize canvas
+    resizeCanvas(newWidth, newHeight);
+    background(canvasSettings.backgroundColor);
+
+    // Update cursor position to stay within new bounds
+    if (myCursor) {
+      myCursor.updatePosition(createVector(width / 2, height / 2));
+    }
+
+    console.log(`Canvas resized to: ${newWidth}x${newHeight}`);
+  }, 100);
+}
+
 // Helper function to normalize coordinates
 function normalizeCoords(x, y) {
   return {
@@ -16,7 +64,6 @@ function normalizeCoords(x, y) {
     y: map(y, 0, height, 0, 1),
   };
 }
-31;
 
 // Helper function to denormalize coordinates (for receiving from server)
 function denormalizeCoords(normalizedX, normalizedY) {
@@ -27,14 +74,18 @@ function denormalizeCoords(normalizedX, normalizedY) {
 }
 
 function setup() {
-  // Create canvas using default settings first
-  let canvas = createCanvas(100, 100);
+  // Create canvas using responsive size
+  let canvas = createCanvas(getResponsiveWidth(), getResponsiveHeight());
   canvas.parent("canvasContainer");
 
   // Set background - convert hex to P5.js format
   background(canvasSettings.backgroundColor);
   let v = createVector(width / 2, height / 2);
   myCursor = new CursorCircle(v, 20, "red");
+
+  // Listen for orientation changes
+  window.addEventListener("orientationchange", handleOrientationChange);
+  window.addEventListener("resize", handleOrientationChange);
 
   // Prevent default touch behavior on canvas
   canvas.elt.addEventListener(
@@ -70,8 +121,10 @@ function setup() {
     // Update settings from server if provided
     if (data.canvasSettings) {
       canvasSettings = data.canvasSettings;
-      // Resize canvas if settings changed
-      resizeCanvas(eval(canvasSettings.width), eval(canvasSettings.height));
+      // Use responsive sizing instead of fixed server settings
+      const newWidth = getResponsiveWidth();
+      const newHeight = getResponsiveHeight();
+      resizeCanvas(newWidth, newHeight);
       background(canvasSettings.backgroundColor);
     }
     if (data.drawingSettings) {
