@@ -7,6 +7,7 @@ let images = [];
 let manifest;
 
 function preload() {
+  console.log("******** Preloading assets...********");
   settings = loadJSON("settings.json");
   // get all path for any dragon images
   manifest = loadJSON("assets/manifest.json");
@@ -16,6 +17,7 @@ function setup() {
   // Load all PNG images from the manifest
   for (let filename of manifest.images) {
     let img = loadImage("assets/" + filename);
+    console.log(`------Loaded image: ${filename}`);
     images.push(img);
   }
 
