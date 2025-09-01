@@ -6,11 +6,15 @@ let settings;
 let images = [];
 let manifest;
 
+let mySprite;
+let anim;
+
 function preload() {
   console.log("******** Preloading assets...********");
   settings = loadJSON("settings.json");
   // get all path for any dragon images
   manifest = loadJSON("assets/manifest.json");
+  mySprite = createSpritesheet("assets/bird.png", 3, 2);
 }
 
 function setup() {
@@ -19,6 +23,7 @@ function setup() {
     let img = loadImage("assets/" + filename);
     console.log(`------Loaded image: ${filename}`);
     images.push(img);
+    anim = createSpriteAnimation(mySprite, [0, 1, 2, 3, 4, 5], 5);
   }
 
   console.log(`Loaded ${images.length} images`);
@@ -110,6 +115,7 @@ function setup() {
 function draw() {
   // Clear background each frame
   background(settings.canvas.backgroundColor);
+  anim.update();
 
   // Update and draw all dragons
   for (let clientId in dragons) {

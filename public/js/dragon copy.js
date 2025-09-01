@@ -174,7 +174,7 @@ class Dragon {
     rotate(angle);
     animateSprite(mySprite, -50, -50, 100, 100);
 
-    //image(this.head, -this.config.headSize / 2, -this.config.headSize / 2, this.config.headSize, this.config.headSize);
+    image(this.head, -this.config.headSize / 2, -this.config.headSize / 2, this.config.headSize, this.config.headSize);
     pop();
   }
 

@@ -6,6 +6,7 @@
     <title>Drawing Canvas (Backend)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="js/p5.spritesheet.js"></script>
     <link rel="stylesheet" href="styles/drawing.css" />
   </head>
   <body>
@@ -22,7 +23,7 @@
       // Wait for page to load, then start splash sequence
       window.addEventListener("load", function () {
         setTimeout(function () {
-          const splash = document.getElementById("splashScreen");
+          const splash = document.getElementById("splashScreen/splash.png");
           splash.classList.add("fade-out");
 
           // Remove splash screen from DOM after fade completes
