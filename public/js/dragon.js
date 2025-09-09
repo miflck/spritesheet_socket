@@ -17,6 +17,8 @@ class Dragon {
       headSize: options.headSize || 100,
       easing: options.easing || 0.05, // Simple easing factor
       segmentEasing: options.segmentEasing || 0.5,
+      noiseScale: options.noiseScale || 0.1, // Scale for Perlin noise time progression
+      noiseStrength: options.noiseStrength || 100, // Strength of the noise effect
     };
 
     // Initialize segments (maintain original property structure)
@@ -30,6 +32,11 @@ class Dragon {
     this.targetX = 0;
     this.targetY = 0;
     this.angle = 0;
+
+    // Noise offset for unique movement per dragon
+    this.noiseOffsetX = random(1000);
+    this.noiseOffsetY = random(1000, 2000);
+    this.noiseTime = 0;
 
     // State
     this.isActive = false;
@@ -50,14 +57,26 @@ class Dragon {
 
   update() {
     if (!this.isActive) return;
+
     // Update the animation
     if (this.animation) {
       this.animation.update();
     }
 
-    // Simple easing toward target
-    let dx = this.targetX - this.x;
-    let dy = this.targetY - this.y;
+    // Increment noise time for continuous movement
+    this.noiseTime += this.config.noiseScale;
+
+    // Generate Perlin noise offsets
+    const noiseX = (noise(this.noiseOffsetX + this.noiseTime) - 0.5) * this.config.noiseStrength;
+    const noiseY = (noise(this.noiseOffsetY + this.noiseTime) - 0.5) * this.config.noiseStrength;
+
+    // Add noise to target position
+    const noisyTargetX = this.targetX + noiseX;
+    const noisyTargetY = this.targetY + noiseY;
+
+    // Simple easing toward noisy target
+    let dx = noisyTargetX - this.x;
+    let dy = noisyTargetY - this.y;
     this.angle = atan2(dy, dx);
 
     this.x += dx * this.config.easing;
