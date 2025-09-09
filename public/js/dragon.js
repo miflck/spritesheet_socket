@@ -171,10 +171,10 @@ class Dragon {
 
     const { angle, shouldFlip } = this._calculateHeadOrientation();
 
-    if (!shouldFlip) {
+    if (shouldFlip) {
       scale(-1, 1);
     }
-    rotate(angle);
+    // rotate(angle);
     this.animation.draw(
       -this.config.headSize / 2,
       -this.config.headSize / 2,

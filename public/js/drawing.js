@@ -4,6 +4,7 @@ let prevX, prevY;
 let lastMouseX = -1;
 let lastMouseY = -1;
 let myColor = "#000000"; // Default color until server assigns one
+let myColorIndex = 0; // Default color index until server assigns one
 let canvasSettings = { width: 800, height: 600, backgroundColor: "red" };
 let drawingSettings = { strokeWeight: 3 };
 let uiSettings = { showClientIds: true };
@@ -16,7 +17,6 @@ function normalizeCoords(x, y) {
     y: map(y, 0, height, 0, 1),
   };
 }
-31;
 
 // Helper function to denormalize coordinates (for receiving from server)
 function denormalizeCoords(normalizedX, normalizedY) {
@@ -67,6 +67,8 @@ function setup() {
   // Listen for assigned color and settings from server
   socket.on("assigned-color", (data) => {
     myColor = data.color;
+    myColorIndex = data.colorIndex;
+
     // Update settings from server if provided
     if (data.canvasSettings) {
       canvasSettings = data.canvasSettings;
@@ -83,6 +85,7 @@ function setup() {
     }
 
     console.log("Assigned color:", myColor);
+    console.log("Assigned color index:", myColorIndex);
     console.log("Canvas settings2:", data.canvasSettings);
     background(canvasSettings.backgroundColor);
 

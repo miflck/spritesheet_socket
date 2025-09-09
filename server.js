@@ -24,8 +24,9 @@ try {
   };
 }
 
-// Store client colors
+// Store client colors and their indices
 const clientColors = new Map();
+const clientColorIndices = new Map();
 
 // Serve static files from public directory
 app.use(express.static("public"));
@@ -46,19 +47,22 @@ io.on("connection", (socket) => {
   }
 
   // Assign a random color to new client
-  const randomColor = settings.colors[Math.floor(Math.random() * settings.colors.length)];
+  const colorIndex = Math.floor(Math.random() * settings.colors.length);
+  const randomColor = settings.colors[colorIndex];
   clientColors.set(socket.id, randomColor);
+  clientColorIndices.set(socket.id, colorIndex);
 
-  // Send the assigned color and canvas settings to the client
+  // Send the assigned color, color index, and canvas settings to the client
   socket.emit("assigned-color", {
     color: randomColor,
-    canvasSettings: settings.canvas,
-    drawingSettings: settings.drawing,
-    uiSettings: settings.ui,
+    colorIndex: colorIndex,
+    canvasSettings: settings.canvas || null,
+    drawingSettings: settings.drawing || null,
+    uiSettings: settings.ui || null,
   });
 
   if (settings.server.enableLogging) {
-    console.log(`Assigned color ${randomColor} to client ${socket.id}`);
+    console.log(`Assigned color ${randomColor} (index ${colorIndex}) to client ${socket.id}`);
   }
 
   // Handle drawing data
@@ -66,6 +70,7 @@ io.on("connection", (socket) => {
     // Add client ID and their assigned color to the drawing data
     data.clientId = socket.id;
     data.color = clientColors.get(socket.id) || "#000000";
+    data.colorIndex = clientColorIndices.get(socket.id) || 0;
     // Broadcast to display clients only
     io.to("display").emit("drawing", data);
   });
@@ -75,6 +80,7 @@ io.on("connection", (socket) => {
     // Add client ID and their assigned color
     data.clientId = socket.id;
     data.color = clientColors.get(socket.id) || "#000000";
+    data.colorIndex = clientColorIndices.get(socket.id) || 0;
     io.to("display").emit("cursor-position", data);
   });
 
@@ -93,8 +99,9 @@ io.on("connection", (socket) => {
     if (settings.server.enableLogging) {
       console.log("User disconnected:", socket.id);
     }
-    // Remove client color from memory
+    // Remove client color and index from memory
     clientColors.delete(socket.id);
+    clientColorIndices.delete(socket.id);
     // Tell display clients to remove this cursor
     io.to("display").emit("client-disconnected", { clientId: socket.id });
   });

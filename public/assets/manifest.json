@@ -1,5 +1,12 @@
 {
   "images": [
+    "bee_blue.png",
+    "bee_cyan.png",
+    "bee_green.png",
+    "bee_orange.png",
+    "bee_pink.png",
+    "bee_red.png",
+    "bee_yellow.png",
     "butterfly_1_blue.png",
     "butterfly_1_cyan.png",
     "butterfly_1_green.png",
@@ -8,5 +15,5 @@
     "butterfly_1_red.png",
     "butterfly_1_yellow.png"
   ],
-  "generated": "2025-07-31T14:23:29.552Z"
+  "generated": "2025-09-09T18:43:02.730Z"
 }

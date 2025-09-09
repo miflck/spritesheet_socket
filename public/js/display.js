@@ -68,10 +68,18 @@ function setup() {
 
     // Create dragon if it doesn't exist
     if (!dragons[clientId]) {
-      let randomAnimation = random(animations);
+      // Use color index to select sprite sheet, with fallback to first animation if index is out of bounds
+      let selectedAnimation;
+      if (data.colorIndex !== undefined && data.colorIndex < animations.length) {
+        selectedAnimation = animations[data.colorIndex];
+        console.log(`Using sprite sheet index ${data.colorIndex} for client ${clientId}`);
+      } else {
+        selectedAnimation = animations[0] || random(animations); // Fallback to first or random if index invalid
+        console.log(`Color index ${data.colorIndex} out of bounds, using fallback for client ${clientId}`);
+      }
 
-      dragons[clientId] = new Dragon(clientId, data.color, randomAnimation, settings.dragon);
-      console.log(`Created dragon for client ${clientId}`);
+      dragons[clientId] = new Dragon(clientId, data.color, selectedAnimation, settings.dragon);
+      console.log(`Created dragon for client ${clientId} with color index ${data.colorIndex}`);
     }
 
     // Denormalize coordinates before using them
@@ -87,10 +95,18 @@ function setup() {
 
     // Create dragon if it doesn't exist
     if (!dragons[clientId]) {
-      // Get random animation
-      let randomAnimation = random(animations);
-      dragons[clientId] = new Dragon(clientId, data.color, randomAnimation, settings.dragon);
-      console.log(`Created dragon for client ${clientId} with random animation`);
+      // Use color index to select sprite sheet, with fallback to first animation if index is out of bounds
+      let selectedAnimation;
+      if (data.colorIndex !== undefined && data.colorIndex < animations.length) {
+        selectedAnimation = animations[data.colorIndex];
+        console.log(`Using sprite sheet index ${data.colorIndex} for client ${clientId}`);
+      } else {
+        selectedAnimation = animations[0] || random(animations); // Fallback to first or random if index invalid
+        console.log(`Color index ${data.colorIndex} out of bounds, using fallback for client ${clientId}`);
+      }
+
+      dragons[clientId] = new Dragon(clientId, data.color, selectedAnimation, settings.dragon);
+      console.log(`Created dragon for client ${clientId} with color index ${data.colorIndex}`);
     }
 
     // Denormalize coordinates before using them
