@@ -28,7 +28,7 @@
     "strokeWeight": 3
   },
 
-  "dragon": {
+  "animal": {
     "headSize": 100,
     "opacity": 100,
     "timeOut": 3000,

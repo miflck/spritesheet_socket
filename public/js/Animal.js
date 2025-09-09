@@ -1,10 +1,9 @@
-class Dragon {
+class Animal {
   constructor(clientId, color, animation, options = {}) {
     // Basic properties
     this.clientId = clientId;
     this.color = color;
     this.animation = animation;
-
     // Configuration with defaults
     this.config = {
       opacity: options.opacity || 100,
@@ -14,7 +13,6 @@ class Dragon {
       noiseScale: options.noiseScale || 0.005, // Scale for Perlin noise time progression
       noiseStrength: options.noiseStrength || 500, // Strength of the noise effect
     };
-
     // Simple position and target
     this.x = 0;
     this.y = 0;
@@ -22,12 +20,10 @@ class Dragon {
     this.targetX = 0;
     this.targetY = 0;
     this.angle = 0;
-
-    // Noise offset for unique movement per dragon
+    // Noise offset for unique movement per animal
     this.noiseOffsetX = random(1000);
     this.noiseOffsetY = random(1000, 2000);
     this.noiseTime = 0;
-
     // State
     this.isActive = false;
     this.lastUpdate = Date.now();
@@ -47,38 +43,30 @@ class Dragon {
 
   update() {
     if (!this.isActive) return;
-
     // Update the animation
     if (this.animation) {
       this.animation.update();
     }
-
     // Store previous position for flip calculation
     this.prevX = this.x;
-
     // Increment noise time for continuous movement
     this.noiseTime += this.config.noiseScale;
-
     // Generate Perlin noise offsets
     const noiseX = (noise(this.noiseOffsetX + this.noiseTime) - 0.5) * this.config.noiseStrength;
     const noiseY = (noise(this.noiseOffsetY + this.noiseTime) - 0.5) * this.config.noiseStrength;
-
     // Add noise to target position
     const noisyTargetX = this.targetX + noiseX;
     const noisyTargetY = this.targetY + noiseY;
-
     // Simple easing toward noisy target
     let dx = noisyTargetX - this.x;
     let dy = noisyTargetY - this.y;
     this.angle = atan2(dy, dx);
-
     this.x += dx * this.config.easing;
     this.y += dy * this.config.easing;
   }
 
   draw() {
     if (!this.isActive) return;
-
     push();
     this._drawHead();
     pop();
@@ -108,20 +96,16 @@ class Dragon {
     // Draw head image with rotation and flipping
     push();
     translate(this.x, this.y);
-
     const { shouldFlip } = this._calculateHeadOrientation();
-
     if (!shouldFlip) {
       scale(-1, 1);
     }
-
     this.animation.draw(
       -this.config.headSize / 2,
       -this.config.headSize / 2,
       this.config.headSize,
       this.config.headSize
     );
-
     pop();
   }
 
@@ -129,7 +113,6 @@ class Dragon {
     // Calculate flip based on movement direction (current x vs previous x)
     const dx = this.x - this.prevX;
     const shouldFlip = dx < 0; // Flip when moving left
-
     return { shouldFlip };
   }
 

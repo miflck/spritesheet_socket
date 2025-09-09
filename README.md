@@ -1,15 +1,17 @@
-# Dragon Canvas
+# Animal Canvas
 
-A collaborative application where multiple users can move dragons together in real-time,
+A collaborative drawing application where multiple users can draw together in real-time, with their cursors represented as animated animals (butterflies, etc.) on a display screen.
 
 ## Architecture
 
 The application consists of:
 
-- **Drawing Interface** (`drawing.js`) - Where users draw and interact
-- **Display Interface** (`display.js`) - Shows the collaborative canvas with dragon cursors
+- **Drawing Interface** (`drawing.js`) - Where users draw and interact with animated cursor feedback
+- **Display Interface** (`display.js`) - Shows the collaborative canvas with animated animal cursors
 - **Server** (`server.js`) - Handles real-time communication between clients
 - **Settings** (`settings.json`) - Configuration file for all application parameters
+- **Animal System** (`Animal.js`) - Manages animated animal representations of user cursors
+- **Sprite Animation** (`p5.spritesheet.js`) - Custom p5.js library for sprite sheet animations
 
 ## Setup and Installation
 
@@ -17,7 +19,7 @@ The application consists of:
 
    ```bash
    git clone [your-repo-url]
-   cd dragon-canvas
+   cd animal-canvas
    ```
 
 2. **Install Dependencies**
@@ -26,7 +28,7 @@ The application consists of:
    npm install
    ```
 
-3. **Generate Asset Manifest** (if you add or remove dragon images)
+3. **Generate Asset Manifest** (if you add or remove animal sprite images)
 
    ```bash
    npm run build
@@ -37,15 +39,17 @@ The application consists of:
    ```
    project/
    ├── server.js
+   ├── Animal.js              # Animal cursor class
    ├── public/
    │   ├── index.html          # Drawing interface
    │   ├── display.html        # Display interface
-   │   ├── drawing.js
-   │   ├── display.js
-   │   ├── settings.json
+   │   ├── drawing.js          # Drawing interface logic
+   │   ├── display.js          # Display interface logic
+   │   ├── p5.spritesheet.js   # Sprite animation library
+   │   ├── settings.json       # Configuration
    │   └── assets/
-   │       ├── manifest.json   # List of dragon images
-   │       └── *.png          # Dragon image files
+   │       ├── manifest.json   # List of animal sprite images
+   │       └── *.png          # Animal sprite sheet files
    ```
 
 5. **Start the Server**
@@ -69,13 +73,15 @@ The application consists of:
 1. Open `http://localhost:3000` on any device
 2. Start drawing with mouse or touch
 3. Press spacebar to clear the canvas
-4. Each user automatically gets assigned a unique color
+4. Each user gets a unique color and animated cursor with triangular indicators
+5. Cursor appears as a colored circle with animated triangles that blink after 5 seconds
 
 ### For Display
 
 1. Open `http://localhost:3000/display` on a large screen or projector
-2. Watch as users' cursors appear as animated dragons
-3. See real-time collaborative drawing with dragon representations
+2. Watch as users' cursors appear as animated animals (butterflies, etc.)
+3. See real-time collaborative drawing with animal representations
+4. Each user gets a different animal sprite based on their color assignment
 
 ## Configuration
 
@@ -106,19 +112,20 @@ Edit `settings.json` to customize:
 ```json
 "drawing": {
   "strokeWeight": 5,           // Brush thickness
-  "cursorSize": 20,           // Cursor size
+  "cursorSize": 20            // Cursor size on drawing interface
 }
 ```
 
-### Dragon Settings
+### Animal Settings
 
 ```json
-"dragon": {
-  "headSize": 100,            // Dragon head size
-  "segNum": 30,               // Number of body segments
-  "segLength": 15,            // Length of each segment
-  "strokeWeight": 9,          // Dragon outline thickness
-  "opacity": 180              // Dragon transparency
+"animal": {
+  "headSize": 100,            // Animal sprite size
+  "opacity": 180,             // Animal transparency
+  "timeOut": 3000,           // Inactivity timeout (ms)
+  "easing": 0.05,            // Movement smoothing
+  "noiseScale": 0.005,       // Perlin noise time scale
+  "noiseStrength": 500       // Perlin noise movement strength
 }
 ```
 
@@ -126,8 +133,9 @@ Edit `settings.json` to customize:
 
 ```json
 "ui": {
-  "showClientIds": true,      // Show client IDs near dragons
-  "clientIdLength": 8         // Length of displayed client ID
+  "showClientIds": true,      // Show client IDs near animals
+  "clientIdLength": 8,        // Length of displayed client ID
+  "clearStatusDelay": 2000   // Status message delay after clear
 }
 ```
 
@@ -136,12 +144,39 @@ Edit `settings.json` to customize:
 ```json
 "server": {
   "port": 3000,                    // Server port
-  "cursorInactiveTimeout": 5000,   // Time before removing inactive dragons (ms)
+  "cursorInactiveTimeout": 5000,   // Time before removing inactive animals (ms)
   "enableLogging": true            // Enable server logging
 }
 ```
 
 ## Technical Details
+
+### Sprite Animation System
+
+The application uses a custom p5.js sprite animation library (`p5.spritesheet.js`) that provides:
+
+- **Sprite Sheet Loading**: Load and parse sprite sheets with configurable grid layouts
+- **Frame Animation**: Automatic frame cycling with customizable speed
+- **Animation Control**: Play, pause, loop controls for animations
+- **p5.js Integration**: Functions work like native p5.js drawing functions
+
+**Key Functions:**
+
+- `createSpritesheet(imagePath, cols, rows)` - Load a sprite sheet
+- `createSpriteAnimation(spritesheet, frames, speed)` - Create an animation
+- `drawSprite(spritesheet, frameIndex, x, y, w, h)` - Draw a specific frame
+- `animateSprite(spritesheet, x, y, w, h)` - Auto-animate through all frames
+
+### Animal Cursor System
+
+Each user's cursor is represented by an `Animal` class instance that features:
+
+- **Smooth Movement**: Eased interpolation toward target positions
+- **Perlin Noise**: Organic, lifelike movement patterns
+- **Sprite Animation**: Animated sprite sheets (9-frame butterfly animations)
+- **Orientation**: Automatic sprite flipping based on movement direction
+- **Color Assignment**: Each user gets a unique color and corresponding sprite
+- **Automatic Cleanup**: Inactive animals are removed after timeout
 
 ### Coordinate Normalization
 
@@ -151,26 +186,19 @@ The application uses normalized coordinates (0-1) for communication between clie
 
 Uses Socket.IO for real-time communication:
 
-- `drawing` - Sends line drawing data
+- `drawing` - Sends line drawing data with color information
 - `cursor-position` - Sends cursor/touch position updates
 - `clear` - Clears the canvas for all users
-- `assigned-color` - Server assigns colors and to new clients
-- `client-disconnected` - Removes dragons when users disconnect
-
-### Dragon Animation
-
-Each user's cursor is represented by an animated dragon with:
-
-- Smooth movement interpolation
-- Segmented body that follows the head
-- Automatic cleanup of inactive dragons
-- Color matching the user's assigned drawing color
+- `assigned-color` - Server assigns colors and settings to new clients
+- `client-disconnected` - Removes animals when users disconnect
+- `join-display` - Identifies display clients for proper routing
 
 ### Mobile Support
 
 - Touch event handling for mobile devices
 - Prevents default scrolling behavior on the canvas
 - Responsive canvas sizing
+- Touch-based drawing with same functionality as desktop
 
 ## Dependencies
 
@@ -186,6 +214,7 @@ Each user's cursor is represented by an animated dragon with:
 ### Client-side Libraries
 
 - **p5.js** - Creative coding library (loaded via CDN)
+- **Socket.IO Client** - Real-time communication client
 
 ### System Requirements
 
@@ -198,28 +227,50 @@ Works in modern browsers that support:
 - WebSocket connections
 - HTML5 Canvas
 - Touch events (for mobile)
+- ES6+ JavaScript features
 
 ## Available Scripts
 
 - `npm start` - Start the production server
 - `npm run dev` - Start development server with auto-restart using nodemon
-- `npm run build` - Generate asset manifest for dragon images
+- `npm run build` - Generate asset manifest for animal sprite images
 - `npm run prebuild` - Automatically runs before build to generate manifest
 
 ## Asset Management
 
-The application includes a build system for managing dragon image assets:
+The application includes a build system for managing animal sprite assets:
 
-1. **Add dragon images** to the `public/assets/` directory (PNG format recommended)
+1. **Add animal sprite sheets** to the `public/assets/` directory (PNG format, 9x1 grid recommended)
 2. **Run the build command** to generate the manifest:
    ```bash
    npm run build
    ```
-3. **The manifest file** (`assets/manifest.json`) will list all available images for the dragons
+3. **The manifest file** (`assets/manifest.json`) will list all available sprite sheets for the animals
+
+### Sprite Sheet Format
+
+Animal sprites should be:
+
+- **PNG format** for transparency support
+- **9 frames horizontally** in a single row (9x1 grid)
+- **Square aspect ratio** for each frame
+- **Consistent sizing** across all sprite sheets
 
 ## Development Notes
 
-- The drawing interface normalizes coordinates before sending to ensure consistency across different screen sizes
-- The display interface denormalizes coordinates when receiving data
-- Dragons are automatically removed after a configurable timeout period
+- The drawing interface shows animated cursors with blinking triangular indicators
+- The display interface shows users as animated animals using sprite sheet animations
+- Animals move with organic Perlin noise patterns for lifelike behavior
+- Coordinates are normalized for cross-device compatibility
+- Color assignment determines which sprite sheet each user gets
 - All settings can be modified without changing code by editing `settings.json`
+- The sprite animation system extends p5.js with custom functions for easy sprite handling
+
+## Animation Features
+
+- **Smooth Interpolation**: Animal movements use easing for smooth motion
+- **Organic Movement**: Perlin noise adds natural, lifelike movement patterns
+- **Sprite Flipping**: Animals automatically face their movement direction
+- **Frame Animation**: Each animal cycles through sprite frames for realistic animation
+- **Color Coordination**: Animal sprites are selected based on user's assigned color
+- **Performance Optimized**: Efficient sprite rendering and animation updates

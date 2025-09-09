@@ -1,6 +1,6 @@
 let socket;
 let statusElement;
-let dragons = {}; // Store dragon instances for each client
+let animals = {}; // Store animal instances for each client
 let settings;
 
 let images = [];
@@ -14,7 +14,7 @@ let anim;
 function preload() {
   console.log("******** Preloading assets...********");
   settings = loadJSON("settings.json");
-  // get all path for any dragon images
+  // get all path for any animal images
   manifest = loadJSON("assets/manifest.json");
   mySprite = createSpritesheet("assets/butterfly_1_blue.png", 9, 1);
 }
@@ -51,7 +51,7 @@ function setup() {
 
   // Handle connection status
   socket.on("connect", () => {
-    statusElement.textContent = "Connected - Listening for dragons...";
+    statusElement.textContent = "Connected - Listening for animals...";
     statusElement.style.backgroundColor = "#e8f5e8";
     console.log("Connected to server as display client");
   });
@@ -59,15 +59,15 @@ function setup() {
   socket.on("disconnect", () => {
     statusElement.textContent = "Disconnected from server";
     statusElement.style.backgroundColor = "#f5e8e8";
-    dragons = {}; // Clear dragons on disconnect
+    animals = {}; // Clear animals on disconnect
   });
 
   // Listen for drawing data from all drawing clients
   socket.on("drawing", (data) => {
     const clientId = data.clientId;
 
-    // Create dragon if it doesn't exist
-    if (!dragons[clientId]) {
+    // Create animal if it doesn't exist
+    if (!animals[clientId]) {
       // Use color index to select sprite sheet, with fallback to first animation if index is out of bounds
       let selectedAnimation;
       if (data.colorIndex !== undefined && data.colorIndex < animations.length) {
@@ -78,23 +78,23 @@ function setup() {
         console.log(`Color index ${data.colorIndex} out of bounds, using fallback for client ${clientId}`);
       }
 
-      dragons[clientId] = new Dragon(clientId, data.color, selectedAnimation, settings.dragon);
-      console.log(`Created dragon for client ${clientId} with color index ${data.colorIndex}`);
+      animals[clientId] = new Animal(clientId, data.color, selectedAnimation, settings.animal);
+      console.log(`Created animal for client ${clientId} with color index ${data.colorIndex}`);
     }
 
     // Denormalize coordinates before using them
     const denormalized = denormalizeCoords(data.x1, data.y1);
 
-    // Update dragon target position with pixel coordinates
-    dragons[clientId].updateTarget(denormalized.x, denormalized.y);
+    // Update animal target position with pixel coordinates
+    animals[clientId].updateTarget(denormalized.x, denormalized.y);
   });
 
-  // Listen for cursor position updates - create/update dragons
+  // Listen for cursor position updates - create/update animals
   socket.on("cursor-position", (data) => {
     const clientId = data.clientId;
 
-    // Create dragon if it doesn't exist
-    if (!dragons[clientId]) {
+    // Create animal if it doesn't exist
+    if (!animals[clientId]) {
       // Use color index to select sprite sheet, with fallback to first animation if index is out of bounds
       let selectedAnimation;
       if (data.colorIndex !== undefined && data.colorIndex < animations.length) {
@@ -105,23 +105,23 @@ function setup() {
         console.log(`Color index ${data.colorIndex} out of bounds, using fallback for client ${clientId}`);
       }
 
-      dragons[clientId] = new Dragon(clientId, data.color, selectedAnimation, settings.dragon);
-      console.log(`Created dragon for client ${clientId} with color index ${data.colorIndex}`);
+      animals[clientId] = new Animal(clientId, data.color, selectedAnimation, settings.animal);
+      console.log(`Created animal for client ${clientId} with color index ${data.colorIndex}`);
     }
 
     // Denormalize coordinates before using them
     const denormalized = denormalizeCoords(data.x, data.y);
 
-    // Update dragon target position with pixel coordinates
-    dragons[clientId].updateTarget(denormalized.x, denormalized.y);
+    // Update animal target position with pixel coordinates
+    animals[clientId].updateTarget(denormalized.x, denormalized.y);
   });
 
-  // Handle client disconnections - remove dragons
+  // Handle client disconnections - remove animals
   socket.on("client-disconnected", (data) => {
-    // Remove dragon for disconnected client
-    if (dragons[data.clientId]) {
-      delete dragons[data.clientId];
-      console.log(`Removed dragon for client ${data.clientId}`);
+    // Remove animal for disconnected client
+    if (animals[data.clientId]) {
+      delete animals[data.clientId];
+      console.log(`Removed animal for client ${data.clientId}`);
     }
   });
 
@@ -142,28 +142,28 @@ function draw() {
   // Clear background each frame
   background(settings.canvas.backgroundColor);
 
-  // Update and draw all dragons
-  for (let clientId in dragons) {
-    let dragon = dragons[clientId];
+  // Update and draw all animals
+  for (let clientId in animals) {
+    let animal = animals[clientId];
 
-    // Remove inactive dragons
-    if (dragon.isInactive(settings.server.cursorInactiveTimeout)) {
-      delete dragons[clientId];
-      console.log(`Removed inactive dragon for client ${clientId}`);
+    // Remove inactive animals
+    if (animal.isInactive(settings.server.cursorInactiveTimeout)) {
+      delete animals[clientId];
+      console.log(`Removed inactive animal for client ${clientId}`);
       continue;
     }
 
-    // Update dragon movement
-    dragon.update();
+    // Update animal movement
+    animal.update();
 
-    // Draw the dragon
-    dragon.draw();
+    // Draw the animal
+    animal.draw();
 
-    // Draw client ID near dragon head (optional)
-    if (settings.ui.showClientIds && dragon.isActive) {
-      const headPosition = dragon.getHeadPosition();
+    // Draw client ID near animal head (optional)
+    if (settings.ui.showClientIds && animal.isActive) {
+      const headPosition = animal.getHeadPosition();
       push();
-      fill(dragon.color);
+      fill(animal.color);
       noStroke();
       textAlign(LEFT, BOTTOM);
       textSize(12);
