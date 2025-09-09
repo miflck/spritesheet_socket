@@ -25,25 +25,22 @@
   },
 
   "drawing": {
-    "strokeWeight": 5,
-    "cursorSize": 20
+    "strokeWeight": 3
   },
 
   "dragon": {
     "headSize": 100,
-    "segNum": 30,
-    "segLength": 15,
-    "strokeWeight": 9,
-    "maxStrokeWeight": 15,
-    "minStrokeWeidth": 9,
-    "opacity": 180,
+    "opacity": 100,
+    "timeOut": 3000,
     "easing": 0.05,
-    "segmentEasing": 0.5
+    "noiseScale": 0.005,
+    "noiseStrength": 500
   },
 
   "ui": {
     "showClientIds": false,
-    "clientIdLength": 8
+    "clientIdLength": 8,
+    "clearStatusDelay": 2000
   },
 
   "server": {
