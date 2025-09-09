@@ -32,7 +32,7 @@ function setup() {
   canvas.parent("canvasContainer");
 
   // Set background - convert hex to P5.js format
-  background(canvasSettings.backgroundColor);
+  background(0);
   let v = createVector(width / 2, height / 2);
   myCursor = new CursorCircle(v, 20, "red");
 
