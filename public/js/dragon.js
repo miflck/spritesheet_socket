@@ -1,9 +1,9 @@
 class Dragon {
-  constructor(clientId, color, head, options = {}) {
+  constructor(clientId, color, animation, options = {}) {
     // Basic properties
     this.clientId = clientId;
     this.color = color;
-    this.head = head;
+    this.animation = animation;
 
     // Configuration with defaults
     this.config = {
@@ -50,6 +50,10 @@ class Dragon {
 
   update() {
     if (!this.isActive) return;
+    // Update the animation
+    if (this.animation) {
+      this.animation.update();
+    }
 
     // Simple easing toward target
     let dx = this.targetX - this.x;
@@ -67,7 +71,7 @@ class Dragon {
     if (!this.isActive) return;
 
     push();
-    this._drawBody();
+    //this._drawBody();
     this._drawHead();
     pop();
   }
@@ -159,7 +163,7 @@ class Dragon {
     // Draw head base at current position with max stroke weight size
     fill(this.color);
     noStroke();
-    ellipse(this.x, this.y, this.config.maxStrokeWeight * 1.5);
+    //   ellipse(this.x, this.y, this.config.maxStrokeWeight * 1.5);
 
     // Draw head image with rotation and flipping
     push();
@@ -167,12 +171,17 @@ class Dragon {
 
     const { angle, shouldFlip } = this._calculateHeadOrientation();
 
-    if (shouldFlip) {
+    if (!shouldFlip) {
       scale(-1, 1);
     }
 
-    rotate(angle);
-    animateSprite(mySprite, -50, -50, 100, 100);
+    //   rotate(angle);
+    this.animation.draw(
+      -this.config.headSize / 2,
+      -this.config.headSize / 2,
+      this.config.headSize,
+      this.config.headSize
+    );
 
     //image(this.head, -this.config.headSize / 2, -this.config.headSize / 2, this.config.headSize, this.config.headSize);
     pop();

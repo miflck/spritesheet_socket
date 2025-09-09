@@ -6,6 +6,8 @@ let settings;
 let images = [];
 let manifest;
 
+let spriteSheets = []; // Store all sprite sheets
+let animations = []; // Store all animations
 let mySprite;
 let anim;
 
@@ -14,19 +16,23 @@ function preload() {
   settings = loadJSON("settings.json");
   // get all path for any dragon images
   manifest = loadJSON("assets/manifest.json");
-  mySprite = createSpritesheet("assets/bird.png", 3, 2);
+  mySprite = createSpritesheet("assets/butterfly_1_blue.png", 9, 1);
 }
 
 function setup() {
   // Load all PNG images from the manifest
   for (let filename of manifest.images) {
-    let img = loadImage("assets/" + filename);
-    console.log(`------Loaded image: ${filename}`);
-    images.push(img);
-    anim = createSpriteAnimation(mySprite, [0, 1, 2, 3, 4, 5], 5);
+    let spriteSheet = createSpritesheet("assets/" + filename, 9, 1); // Adjust dimensions as needed
+    spriteSheets.push(spriteSheet);
+
+    let animation = createSpriteAnimation(spriteSheet); // Adjust frame sequence and speed
+    animations.push(animation);
+    console.log(`------Loaded sprite sheet and animation: ${filename}`);
   }
 
-  console.log(`Loaded ${images.length} images`);
+  anim = createSpriteAnimation(mySprite);
+
+  console.log(`Loaded ${spriteSheets.length} sprite sheets and animations`);
   // Create canvas using default settings (will be updated when clients send settings)
   let canvas = createCanvas(settings.canvas.displayWidth, settings.canvas.displayHeight);
   canvas.parent("canvasContainer");
@@ -62,7 +68,9 @@ function setup() {
 
     // Create dragon if it doesn't exist
     if (!dragons[clientId]) {
-      dragons[clientId] = new Dragon(clientId, data.color, random(images), settings.dragon);
+      let randomAnimation = random(animations);
+
+      dragons[clientId] = new Dragon(clientId, data.color, randomAnimation, settings.dragon);
       console.log(`Created dragon for client ${clientId}`);
     }
 
@@ -79,8 +87,10 @@ function setup() {
 
     // Create dragon if it doesn't exist
     if (!dragons[clientId]) {
-      dragons[clientId] = new Dragon(clientId, data.color, random(images), settings.dragon);
-      console.log(`Created dragon for client ${clientId}`);
+      // Get random animation
+      let randomAnimation = random(animations);
+      dragons[clientId] = new Dragon(clientId, data.color, randomAnimation, settings.dragon);
+      console.log(`Created dragon for client ${clientId} with random animation`);
     }
 
     // Denormalize coordinates before using them
@@ -115,7 +125,6 @@ function setup() {
 function draw() {
   // Clear background each frame
   background(settings.canvas.backgroundColor);
-  anim.update();
 
   // Update and draw all dragons
   for (let clientId in dragons) {
