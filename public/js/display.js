@@ -38,7 +38,7 @@ function setup() {
   canvas.parent("canvasContainer");
 
   // Set background
-  background(settings.canvas.backgroundColor);
+  background(settings.canvas.displayBackgroundColor);
 
   // Get status element
   statusElement = document.getElementById("status");
@@ -137,7 +137,7 @@ function setup() {
 
   // Handle clear canvas from drawing clients
   socket.on("clear", () => {
-    background(settings.canvas.backgroundColor);
+    background(settings.canvas.displayBackgroundColor);
     if (statusElement) {
       statusElement.textContent = "Canvas cleared by drawing client";
 
@@ -152,7 +152,7 @@ function setup() {
 
 function draw() {
   // Clear background each frame
-  background(settings.canvas.backgroundColor);
+  background(settings.canvas.displayBackgroundColor);
 
   // Update and draw all animals
   for (let clientId in animals) {

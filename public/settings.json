@@ -19,7 +19,8 @@
   "canvas": {
     "width": "windowWidth",
     "height": "windowHeight",
-    "backgroundColor": "#000000",
+    "drawingBackgroundColor": "#000000",
+    "displayBackgroundColor": "#FFFFFF",
     "displayWidth": 1920,
     "displayHeight": 1080
   },

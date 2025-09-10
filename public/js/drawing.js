@@ -5,7 +5,7 @@ let lastMouseX = -1;
 let lastMouseY = -1;
 let myColor = "#000000"; // Default color until server assigns one
 let myColorIndex = 0; // Default color index until server assigns one
-let canvasSettings = { width: 800, height: 600, backgroundColor: "red" };
+let canvasSettings = { width: 800, height: 600, drawingBackgroundColor: "red" };
 let drawingSettings = { strokeWeight: 3 };
 let uiSettings = { showClientIds: true };
 let myCursor;
@@ -32,7 +32,7 @@ function setup() {
   canvas.parent("canvasContainer");
 
   // Set background - convert hex to P5.js format
-  background(0);
+  background(255);
   let v = createVector(width / 2, height / 2);
   myCursor = new CursorCircle(v, 20, "red");
 
@@ -84,7 +84,7 @@ function setup() {
       console.log("Canvas settings:", canvasSettings);
       // Resize canvas if settings changed
       resizeCanvas(eval(canvasSettings.width), eval(canvasSettings.height));
-      background(canvasSettings.backgroundColor);
+      background(canvasSettings.drawingBackgroundColor);
     }
     if (data.drawingSettings) {
       drawingSettings = data.drawingSettings;
@@ -96,7 +96,7 @@ function setup() {
     console.log("Assigned color:", myColor);
     console.log("Assigned color index:", myColorIndex);
     console.log("Canvas settings2:", data.canvasSettings);
-    background(canvasSettings.backgroundColor);
+    background(canvasSettings.drawingBackgroundColor);
 
     console.log("Drawing canvas initialized");
     let v = createVector(width / 2, height / 2);
@@ -106,10 +106,13 @@ function setup() {
 
 function draw() {
   // Only render cursor if initialized
-  background(canvasSettings.backgroundColor);
+  background(canvasSettings.drawingBackgroundColor);
   if (myCursor) {
     myCursor.render();
   }
+
+  let bgColor = canvasSettings.drawingBackgroundColor || "white";
+  console.log("Background color:", bgColor);
 }
 
 function mouseMoved() {
@@ -180,7 +183,7 @@ function mouseReleased() {
 function keyPressed() {
   // Clear canvas on spacebar
   if (key === " ") {
-    background(canvasSettings.backgroundColor);
+    background(canvasSettings.drawingBackgroundColor);
     socket.emit("clear");
   }
 }
