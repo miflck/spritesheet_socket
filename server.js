@@ -24,9 +24,10 @@ try {
   };
 }
 
-// Store client colors and their indices
+// Store client colors and their indices per room
 const clientColors = new Map();
 const clientColorIndices = new Map();
+const clientRooms = new Map(); // Track which room each client is in
 
 // Serve static files from public directory
 app.use(express.static("public"));
@@ -36,8 +37,16 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+app.get("/index2", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index2.html"));
+});
+
 app.get("/display", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "display.html"));
+});
+
+app.get("/display2", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "display2.html"));
 });
 
 // Socket.IO connection handling
@@ -46,52 +55,99 @@ io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
   }
 
-  // Assign a random color to new client
-  const colorIndex = Math.floor(Math.random() * settings.colors.length);
-  const randomColor = settings.colors[colorIndex];
-  clientColors.set(socket.id, randomColor);
-  clientColorIndices.set(socket.id, colorIndex);
+  // Handle joining a drawing room
+  socket.on("join-drawing-room", (roomId) => {
+    const drawingRoom = roomId || "room1"; // Default to room1
+    socket.join(drawingRoom);
+    clientRooms.set(socket.id, drawingRoom);
 
-  // Send the assigned color, color index, and canvas settings to the client
-  socket.emit("assigned-color", {
-    color: randomColor,
-    colorIndex: colorIndex,
-    canvasSettings: settings.canvas || null,
-    drawingSettings: settings.drawing || null,
-    uiSettings: settings.ui || null,
+    // Assign a random color to new client
+    const colorIndex = Math.floor(Math.random() * settings.colors.length);
+    const randomColor = settings.colors[colorIndex];
+    clientColors.set(socket.id, randomColor);
+    clientColorIndices.set(socket.id, colorIndex);
+
+    // Send the assigned color, color index, and canvas settings to the client
+    socket.emit("assigned-color", {
+      color: randomColor,
+      colorIndex: colorIndex,
+      canvasSettings: settings.canvas || null,
+      drawingSettings: settings.drawing || null,
+      uiSettings: settings.ui || null,
+    });
+
+    if (settings.server.enableLogging) {
+      console.log(
+        `Client ${socket.id} joined drawing room ${drawingRoom} with color ${randomColor} (index ${colorIndex})`
+      );
+    }
   });
 
-  if (settings.server.enableLogging) {
-    console.log(`Assigned color ${randomColor} (index ${colorIndex}) to client ${socket.id}`);
-  }
+  // Handle joining a display room
+  socket.on("join-display-room", (roomId) => {
+    const displayRoom = roomId || "display"; // Default to 'display'
+    socket.join(displayRoom);
+    clientRooms.set(socket.id, displayRoom);
+    console.log(`Client ${socket.id} joined display room: ${displayRoom}`);
+  });
 
   // Handle drawing data
   socket.on("drawing", (data) => {
+    const clientRoom = clientRooms.get(socket.id);
+    if (!clientRoom) return;
+
     // Add client ID and their assigned color to the drawing data
     data.clientId = socket.id;
     data.color = clientColors.get(socket.id) || "#000000";
     data.colorIndex = clientColorIndices.get(socket.id) || 0;
-    // Broadcast to display clients only
-    io.to("display").emit("drawing", data);
+
+    // Determine which display room to send to based on drawing room
+    let targetDisplayRoom = "display"; // Default
+    if (clientRoom === "room2") {
+      targetDisplayRoom = "display2";
+    }
+
+    // Broadcast to the appropriate display room
+    io.to(targetDisplayRoom).emit("drawing", data);
   });
 
   // Handle mouse/touch position updates
   socket.on("cursor-position", (data) => {
+    const clientRoom = clientRooms.get(socket.id);
+    if (!clientRoom) return;
+
     // Add client ID and their assigned color
     data.clientId = socket.id;
     data.color = clientColors.get(socket.id) || "#000000";
     data.colorIndex = clientColorIndices.get(socket.id) || 0;
-    io.to("display").emit("cursor-position", data);
+
+    // Determine which display room to send to based on drawing room
+    let targetDisplayRoom = "display";
+    if (clientRoom === "room2") {
+      targetDisplayRoom = "display2";
+    }
+
+    io.to(targetDisplayRoom).emit("cursor-position", data);
   });
 
   // Handle clear canvas
   socket.on("clear", () => {
-    io.to("display").emit("clear");
+    const clientRoom = clientRooms.get(socket.id);
+    if (!clientRoom) return;
+
+    // Determine which display room to send to based on drawing room
+    let targetDisplayRoom = "display";
+    if (clientRoom === "room2") {
+      targetDisplayRoom = "display2";
+    }
+
+    io.to(targetDisplayRoom).emit("clear");
   });
 
-  // Handle joining display room
+  // Legacy support for old join-display event (maps to display room)
   socket.on("join-display", () => {
     socket.join("display");
+    clientRooms.set(socket.id, "display");
     console.log("Client joined display room:", socket.id);
   });
 
@@ -99,11 +155,22 @@ io.on("connection", (socket) => {
     if (settings.server.enableLogging) {
       console.log("User disconnected:", socket.id);
     }
+
+    const clientRoom = clientRooms.get(socket.id);
+
     // Remove client color and index from memory
     clientColors.delete(socket.id);
     clientColorIndices.delete(socket.id);
-    // Tell display clients to remove this cursor
-    io.to("display").emit("client-disconnected", { clientId: socket.id });
+    clientRooms.delete(socket.id);
+
+    // Tell appropriate display clients to remove this cursor
+    if (clientRoom && (clientRoom === "room1" || clientRoom === "room2")) {
+      let targetDisplayRoom = "display";
+      if (clientRoom === "room2") {
+        targetDisplayRoom = "display2";
+      }
+      io.to(targetDisplayRoom).emit("client-disconnected", { clientId: socket.id });
+    }
   });
 });
 
@@ -111,5 +178,8 @@ const PORT = process.env.PORT || settings.server.port;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Available colors: ${settings.colors.length}`);
-  console.log(`Canvas size: ${settings.canvas.width}x${settings.canvas.height}`);
+  console.log(`Canvas size: ${settings.canvas?.width}x${settings.canvas?.height}`);
+  console.log("Room mapping:");
+  console.log("  / (index.html) -> room1 -> display (/display)");
+  console.log("  /index2 -> room2 -> display2 (/display2)");
 });

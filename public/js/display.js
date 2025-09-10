@@ -46,19 +46,29 @@ function setup() {
   // Initialize socket connection
   socket = io();
 
-  // Join the display room
-  socket.emit("join-display");
+  // Determine which display room to join based on the page
+  // Check if ROOM_ID is set in the HTML, otherwise default to 'display'
+  const roomId = window.ROOM_ID || "display";
+
+  socket.on("connect", () => {
+    console.log(`Connected to server, joining display room: ${roomId}`);
+    socket.emit("join-display-room", roomId);
+  });
 
   // Handle connection status
   socket.on("connect", () => {
-    statusElement.textContent = "Connected - Listening for animals...";
-    statusElement.style.backgroundColor = "#e8f5e8";
+    if (statusElement) {
+      statusElement.textContent = "Connected - Listening for animals...";
+      statusElement.style.backgroundColor = "#e8f5e8";
+    }
     console.log("Connected to server as display client");
   });
 
   socket.on("disconnect", () => {
-    statusElement.textContent = "Disconnected from server";
-    statusElement.style.backgroundColor = "#f5e8e8";
+    if (statusElement) {
+      statusElement.textContent = "Disconnected from server";
+      statusElement.style.backgroundColor = "#f5e8e8";
+    }
     animals = {}; // Clear animals on disconnect
   });
 
@@ -128,11 +138,13 @@ function setup() {
   // Handle clear canvas from drawing clients
   socket.on("clear", () => {
     background(settings.canvas.backgroundColor);
-    statusElement.textContent = "Canvas cleared by drawing client";
+    if (statusElement) {
+      statusElement.textContent = "Canvas cleared by drawing client";
 
-    setTimeout(() => {
-      statusElement.textContent = "Connected - Listening for drawings...";
-    }, settings.ui.clearStatusDelay);
+      setTimeout(() => {
+        statusElement.textContent = "Connected - Listening for drawings...";
+      }, settings.ui.clearStatusDelay);
+    }
   });
 
   console.log("Display view initialized");

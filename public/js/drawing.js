@@ -64,6 +64,15 @@ function setup() {
   // Initialize socket connection
   socket = io();
 
+  // Determine which room to join based on the page
+  // Check if ROOM_ID is set in the HTML, otherwise default to room1
+  const roomId = window.ROOM_ID || "room1";
+
+  socket.on("connect", () => {
+    console.log(`Connected to server, joining drawing room: ${roomId}`);
+    socket.emit("join-drawing-room", roomId);
+  });
+
   // Listen for assigned color and settings from server
   socket.on("assigned-color", (data) => {
     myColor = data.color;
