@@ -33,9 +33,6 @@ function setup() {
   anim = createSpriteAnimation(mySprite);
 
   console.log(`Loaded ${spriteSheets.length} sprite sheets and animations`);
-  // Create canvas using default settings (will be updated when clients send settings)
-  let canvas = createCanvas(settings.canvas.displayWidth, settings.canvas.displayHeight);
-  canvas.parent("canvasContainer");
 
   // Set background
   background(settings.canvas.displayBackgroundColor);
@@ -146,6 +143,14 @@ function setup() {
       }, settings.ui.clearStatusDelay);
     }
   });
+  let canvas;
+  // Create canvas using default settings (will be updated when clients send settings)
+  if (roomId === "display2") {
+    canvas = createCanvas(settings.canvas.display2Width, settings.canvas.display2Height);
+  } else {
+    canvas = createCanvas(settings.canvas.displayWidth, settings.canvas.displayHeight);
+  }
+  canvas.parent("canvasContainer");
 
   console.log("Display view initialized");
 }
